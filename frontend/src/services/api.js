@@ -11,6 +11,9 @@ const API = axios.create({
 export const loginUser = (data) => 
     API.post('/auth/login', data);
 
+export const getUserByUsername = (username) =>
+    API.get(`/auth/user/${encodeURIComponent(username)}`);
+
 export const registerUser = (data) => 
     API.post('/auth/register', data);
 
@@ -64,3 +67,6 @@ export const getAlerts = () =>
 
 export const getPortfolioRisk = (portfolioId) => 
     API.get(`/analytics/risk/${portfolioId}`);
+
+export const activateUser = (userId) =>
+    API.put('/admin/users/' + userId + '/activate');

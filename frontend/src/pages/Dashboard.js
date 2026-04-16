@@ -60,10 +60,13 @@ function Dashboard() {
                     <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
                     <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
                     <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    {role === 'ADMIN' && (
+                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                    )}
                 </div>
                 <div style={styles.userInfo}>
                     <span style={styles.username}>👤 {username}</span>
-                    <span style={styles.role}>{role}</span>
+                    <span style={{ ...styles.role, color: role === 'ADMIN' ? '#ffd700' : '#00d4ff', background: role === 'ADMIN' ? 'rgba(255,215,0,0.2)' : 'rgba(0,212,255,0.2)' }}>{role}</span>
                     <button onClick={handleLogout} style={styles.logoutBtn}>Logout</button>
                 </div>
             </nav>

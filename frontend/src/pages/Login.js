@@ -6,6 +6,7 @@ function Login() {
     // State = Component ka data store karta hai
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     
@@ -18,12 +19,21 @@ function Login() {
         setError('');
         
         try {
+            const normalizedUsername = username.trim();
+            const normalizedPassword = password.trim();
+
             // Backend ko login request bhejo
-            const response = await loginUser({ username, password });
+            const response = await loginUser({ username: normalizedUsername, password: normalizedPassword });
             
             if (response.data.success) {
+                const userId = response.data.user_id;
+                if (!userId) {
+                    throw new Error('Login succeeded but user id was not returned');
+                }
+
                 // User info save karo browser mein
-                localStorage.setItem('username', username);
+                localStorage.setItem('user_id', String(userId));
+                localStorage.setItem('username', response.data.username || normalizedUsername);
                 localStorage.setItem('role', response.data.role);
                 localStorage.setItem('isLoggedIn', 'true');
                 
@@ -31,7 +41,7 @@ function Login() {
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError('Invalid username or password!');
+            setError(err.response?.data?.message || err.message || 'Invalid username or password!');
         } finally {
             setLoading(false);
         }
@@ -62,14 +72,23 @@ function Login() {
 
                     <div style={styles.inputGroup}>
                         <label style={styles.label}>Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
-                            style={styles.input}
-                            required
-                        />
+                        <div style={styles.passwordWrap}>
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Enter password"
+                                style={{ ...styles.input, ...styles.passwordInput }}
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword((prev) => !prev)}
+                                style={styles.passwordToggle}
+                            >
+                                {showPassword ? 'Hide' : 'Show'}
+                            </button>
+                        </div>
                     </div>
 
                     {/* Error Message */}
@@ -93,6 +112,13 @@ function Login() {
                     <p>Admin: admin / admin123</p>
                     <p>Investor: ali_investor / ali123</p>
                 </div>
+
+                <p style={styles.registerText}>
+                    Don't have an account?{' '}
+                    <span onClick={() => navigate('/register')} style={styles.registerLink}>
+                        Register
+                    </span>
+                </p>
             </div>
         </div>
     );
@@ -153,6 +179,27 @@ const styles = {
         fontSize: '16px',
         outline: 'none',
     },
+    passwordWrap: {
+        position: 'relative',
+    },
+    passwordInput: {
+        width: '100%',
+        boxSizing: 'border-box',
+        paddingRight: '72px',
+    },
+    passwordToggle: {
+        position: 'absolute',
+        top: '50%',
+        right: '10px',
+        transform: 'translateY(-50%)',
+        border: 'none',
+        background: 'transparent',
+        color: '#00d4ff',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: 'bold',
+        padding: '4px 6px',
+    },
     button: {
         padding: '14px',
         borderRadius: '10px',
@@ -181,6 +228,17 @@ const styles = {
     demoTitle: {
         color: '#00d4ff',
         marginBottom: '5px',
+        fontWeight: 'bold',
+    },
+    registerText: {
+        marginTop: '14px',
+        textAlign: 'center',
+        color: 'rgba(255,255,255,0.75)',
+        fontSize: '14px',
+    },
+    registerLink: {
+        color: '#00d4ff',
+        cursor: 'pointer',
         fontWeight: 'bold',
     }
 };

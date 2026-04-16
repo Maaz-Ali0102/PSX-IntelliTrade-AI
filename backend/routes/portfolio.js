@@ -9,15 +9,42 @@ const { getConnection } = require('../db');
 router.post('/create', async (req, res) => {
     // Frontend se user_id aur portfolio name aayega
     const { user_id, portfolio_name } = req.body;
+    const normalizedPortfolioName = (portfolio_name || '').trim().replace(/\s+/g, ' ');
     
     let connection;
     try {
         connection = await getConnection();
+
+        if (!normalizedPortfolioName) {
+            return res.status(400).json({
+                success: false,
+                message: 'Portfolio name is required'
+            });
+        }
+
+        const existingPortfolio = await connection.execute(
+            `SELECT COUNT(*) AS portfolio_count
+             FROM portfolios
+             WHERE user_id = :user_id
+             AND UPPER(TRIM(REGEXP_REPLACE(portfolio_name, '\\s+', ' '))) = UPPER(:portfolio_name)`,
+            { user_id, portfolio_name: normalizedPortfolioName },
+            { outFormat: require('oracledb').OUT_FORMAT_OBJECT }
+        );
+
+        const portfolioCountRow = existingPortfolio.rows[0] || {};
+        const portfolioCount = portfolioCountRow.PORTFOLIO_COUNT || portfolioCountRow.portfolio_count || 0;
+
+        if (portfolioCount > 0) {
+            return res.status(409).json({
+                success: false,
+                message: 'Portfolio name already exists for this user'
+            });
+        }
         
         await connection.execute(
             `INSERT INTO portfolios (user_id, portfolio_name)
              VALUES (:user_id, :portfolio_name)`,
-            { user_id, portfolio_name },
+            { user_id, portfolio_name: normalizedPortfolioName },
             { autoCommit: true }
         );
         
@@ -50,7 +77,8 @@ router.get('/:user_id', async (req, res) => {
             `SELECT portfolio_id, portfolio_name, 
                     created_at, total_invested
              FROM portfolios
-             WHERE user_id = :user_id`,
+             WHERE user_id = :user_id
+             ORDER BY created_at DESC, portfolio_id DESC`,
             { user_id: req.params.user_id },
             { outFormat: require('oracledb').OUT_FORMAT_OBJECT }
         );
@@ -171,8 +199,22 @@ router.post('/sell', async (req, res) => {
                 price,
                 total: quantity * price
             },
-            { autoCommit: true }
+            { autoCommit: false }
         );
+
+        await connection.execute(
+            `DELETE FROM holdings
+             WHERE portfolio_id = :pid
+             AND company_id = :cid
+             AND quantity <= 0`,
+            {
+                pid: portfolio_id,
+                cid: company_id
+            },
+            { autoCommit: false }
+        );
+
+        await connection.commit();
         
         res.json({ 
             success: true, 
@@ -180,6 +222,13 @@ router.post('/sell', async (req, res) => {
         });
 
     } catch (error) {
+        if (connection) {
+            try {
+                await connection.rollback();
+            } catch (rollbackError) {
+                // Ignore rollback errors, original error will be returned.
+            }
+        }
         res.status(500).json({ 
             success: false, 
             message: error.message 

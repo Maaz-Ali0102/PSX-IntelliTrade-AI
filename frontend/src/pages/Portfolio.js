@@ -1,49 +1,81 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserPortfolios, getPortfolioHoldings, createPortfolio, buyStock, sellStock, getAllStocks } from '../services/api';
+import { getUserPortfolios, getPortfolioHoldings, createPortfolio, buyStock, sellStock, getAllStocks, getUserByUsername } from '../services/api';
 
 function Portfolio() {
     const [portfolios, setPortfolios] = useState([]);
     const [selectedPortfolio, setSelectedPortfolio] = useState(null);
     const [holdings, setHoldings] = useState([]);
     const [stocks, setStocks] = useState([]);
+    const [stocksLoading, setStocksLoading] = useState(true);
+    const [currentUserId, setCurrentUserId] = useState(null);
     const [showCreateForm, setShowCreateForm] = useState(false);
     const [showTradeForm, setShowTradeForm] = useState(false);
     const [tradeType, setTradeType] = useState('BUY');
     const [newPortfolioName, setNewPortfolioName] = useState('');
     const [tradeData, setTradeData] = useState({ company_id: '', quantity: '', price: '' });
+    const [tradeMessage, setTradeMessage] = useState('');
+    const [tradeMessageType, setTradeMessageType] = useState('');
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    // LocalStorage se user_id lao
-    const username = localStorage.getItem('username');
+    const userIdFromStorage = localStorage.getItem('user_id');
+    const usernameFromStorage = localStorage.getItem('username');
+    const role = localStorage.getItem('role');
+    const currentUserIdValue = userIdFromStorage ? Number(userIdFromStorage) : null;
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
-            // Pehle stocks lao phir portfolios
-            const stocksRes = await getAllStocks();
-            setStocks(stocksRes.data.data);
+            setStocksLoading(true);
 
-            // User ID dhundho username se
-            // Hardcoded for now — backend mein fix karein ge
-            const portfoliosRes = await getUserPortfolios(8);
+            let resolvedUserId = currentUserIdValue;
+            if (!resolvedUserId && usernameFromStorage) {
+                const userResponse = await getUserByUsername(usernameFromStorage);
+                resolvedUserId = Number(userResponse.data.data.USER_ID || userResponse.data.data.user_id);
+                if (resolvedUserId) {
+                    localStorage.setItem('user_id', String(resolvedUserId));
+                }
+            }
+
+            if (!resolvedUserId) {
+                localStorage.clear();
+                navigate('/');
+                return;
+            }
+
+            const [stocksRes, portfoliosRes] = await Promise.all([
+                getAllStocks(),
+                getUserPortfolios(resolvedUserId)
+            ]);
+
+            const stockRows = Array.isArray(stocksRes.data.data) ? stocksRes.data.data : [];
+            const uniqueStocks = Array.from(
+                new Map(stockRows.map((stock) => [stock.COMPANY_ID, stock])).values()
+            );
+
+            setCurrentUserId(resolvedUserId);
+            setStocks(uniqueStocks);
             setPortfolios(portfoliosRes.data.data);
         } catch (error) {
             console.error('Error:', error);
+            setTradeMessage(error.response?.data?.message || error.message || 'Failed to load portfolio data');
+            setTradeMessageType('error');
         } finally {
+            setStocksLoading(false);
             setLoading(false);
         }
-    };
+    }, [currentUserIdValue, navigate, usernameFromStorage]);
+
+    useEffect(() => {
+        fetchData();
+    }, [fetchData]);
 
     const handlePortfolioClick = async (portfolio) => {
         setSelectedPortfolio(portfolio);
         try {
             const response = await getPortfolioHoldings(portfolio.PORTFOLIO_ID);
-            setHoldings(response.data.data);
+            const activeHoldings = (response.data.data || []).filter((holding) => Number(holding.QUANTITY) > 0);
+            setHoldings(activeHoldings);
         } catch (error) {
             console.error('Error:', error);
         }
@@ -51,9 +83,30 @@ function Portfolio() {
 
     const handleCreatePortfolio = async () => {
         try {
+            if (!currentUserId) {
+                alert('Unable to determine the logged-in user. Please log in again.');
+                return;
+            }
+
+            const portfolioName = newPortfolioName.trim().replace(/\s+/g, ' ');
+            if (!portfolioName) {
+                alert('Portfolio name is required.');
+                return;
+            }
+
+            const normalizedNewName = portfolioName.toLowerCase();
+            const duplicateExists = portfolios.some((portfolio) =>
+                String(portfolio.PORTFOLIO_NAME || '').trim().replace(/\s+/g, ' ').toLowerCase() === normalizedNewName
+            );
+
+            if (duplicateExists) {
+                alert('Portfolio name already exists for this user.');
+                return;
+            }
+
             await createPortfolio({
-                user_id: 8,
-                portfolio_name: newPortfolioName
+                user_id: currentUserId,
+                portfolio_name: portfolioName
             });
             setNewPortfolioName('');
             setShowCreateForm(false);
@@ -61,11 +114,25 @@ function Portfolio() {
             alert('Portfolio created!');
         } catch (error) {
             console.error('Error:', error);
+            const message = error.response?.data?.message || 'Portfolio creation failed';
+            alert(message);
         }
     };
 
+    const refreshHoldings = useCallback(async (portfolioId) => {
+        const response = await getPortfolioHoldings(portfolioId);
+        const activeHoldings = (response.data.data || []).filter((holding) => Number(holding.QUANTITY) > 0);
+        setHoldings(activeHoldings);
+    }, []);
+
     const handleTrade = async () => {
         try {
+            if (!selectedPortfolio) {
+                setTradeMessage('Select a portfolio first.');
+                setTradeMessageType('error');
+                return;
+            }
+
             const data = {
                 portfolio_id: selectedPortfolio.PORTFOLIO_ID,
                 company_id: tradeData.company_id,
@@ -81,11 +148,13 @@ function Portfolio() {
 
             setShowTradeForm(false);
             setTradeData({ company_id: '', quantity: '', price: '' });
-            handlePortfolioClick(selectedPortfolio);
-            alert(`${tradeType} successful!`);
+            await refreshHoldings(selectedPortfolio.PORTFOLIO_ID);
+            setTradeMessage(`${tradeType} successful!`);
+            setTradeMessageType('success');
         } catch (error) {
             console.error('Error:', error);
-            alert('Trade failed!');
+            setTradeMessage(error.response?.data?.message || 'Trade failed!');
+            setTradeMessageType('error');
         }
     };
 
@@ -105,6 +174,9 @@ function Portfolio() {
                     <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
                     <button onClick={() => navigate('/portfolio')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Portfolio</button>
                     <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    {role === 'ADMIN' && (
+                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                    )}
                 </div>
                 <button onClick={() => { localStorage.clear(); navigate('/'); }} style={styles.logoutBtn}>Logout</button>
             </nav>
@@ -139,6 +211,16 @@ function Portfolio() {
                     </div>
                 )}
 
+                {tradeMessage && (
+                    <div style={{
+                        ...styles.message,
+                        background: tradeMessageType === 'success' ? 'rgba(0,255,136,0.12)' : 'rgba(255,107,107,0.12)',
+                        color: tradeMessageType === 'success' ? '#00ff88' : '#ff6b6b'
+                    }}>
+                        {tradeMessage}
+                    </div>
+                )}
+
                 <div style={styles.mainGrid}>
                     {/* Portfolios List */}
                     <div style={styles.portfoliosList}>
@@ -146,9 +228,9 @@ function Portfolio() {
                         {portfolios.length === 0 ? (
                             <p style={styles.empty}>No portfolios yet — create one!</p>
                         ) : (
-                            portfolios.map((p, i) => (
+                            portfolios.map((p) => (
                                 <div
-                                    key={i}
+                                    key={p.PORTFOLIO_ID}
                                     onClick={() => handlePortfolioClick(p)}
                                     style={{
                                         ...styles.portfolioItem,
@@ -161,6 +243,7 @@ function Portfolio() {
                                     <p style={styles.portfolioDate}>
                                         Created: {new Date(p.CREATED_AT).toLocaleDateString()}
                                     </p>
+                                    <p style={styles.portfolioMeta}>ID: {p.PORTFOLIO_ID}</p>
                                 </div>
                             ))
                         )}
@@ -171,7 +254,7 @@ function Portfolio() {
                         <div style={styles.holdingsCard}>
                             <div style={styles.holdingsHeader}>
                                 <h3 style={styles.sectionTitle}>
-                                    {selectedPortfolio.PORTFOLIO_NAME} — Holdings
+                                    {selectedPortfolio.PORTFOLIO_NAME} (ID: {selectedPortfolio.PORTFOLIO_ID}) — Holdings
                                 </h3>
                                 <button
                                     onClick={() => setShowTradeForm(!showTradeForm)}
@@ -184,6 +267,12 @@ function Portfolio() {
                             {/* Trade Form */}
                             {showTradeForm && (
                                 <div style={styles.tradeForm}>
+                                    <p style={styles.tradePortfolioText}>
+                                        Trading in: {selectedPortfolio.PORTFOLIO_NAME} (ID: {selectedPortfolio.PORTFOLIO_ID})
+                                    </p>
+                                    {stocksLoading ? (
+                                        <p style={styles.loadingStocks}>Loading stocks...</p>
+                                    ) : null}
                                     <div style={styles.tradeTypeRow}>
                                         <button
                                             onClick={() => setTradeType('BUY')}
@@ -206,10 +295,11 @@ function Portfolio() {
                                         value={tradeData.company_id}
                                         onChange={(e) => setTradeData({...tradeData, company_id: e.target.value})}
                                         style={styles.select}
+                                        disabled={stocksLoading}
                                     >
-                                        <option value="">Select Stock</option>
-                                        {stocks.map((s, i) => (
-                                            <option key={i} value={s.COMPANY_ID}>
+                                        <option value="">{stocksLoading ? 'Loading stocks...' : 'Select Stock'}</option>
+                                        {stocks.map((s) => (
+                                            <option key={s.COMPANY_ID} value={s.COMPANY_ID}>
                                                 {s.SYMBOL} — ₨{s.CURRENT_PRICE}
                                             </option>
                                         ))}
@@ -235,7 +325,7 @@ function Portfolio() {
                             )}
 
                             {/* Holdings Table */}
-                            {holdings.length === 0 ? (
+                            {holdings.filter((holding) => Number(holding.QUANTITY) > 0).length === 0 ? (
                                 <p style={styles.empty}>No holdings yet — buy some stocks!</p>
                             ) : (
                                 <table style={styles.table}>
@@ -250,7 +340,7 @@ function Portfolio() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {holdings.map((h, i) => (
+                                        {holdings.filter((holding) => Number(holding.QUANTITY) > 0).map((h, i) => (
                                             <tr key={i}>
                                                 <td style={styles.td}>
                                                     <span style={styles.symbol}>{h.SYMBOL}</span>
@@ -305,15 +395,28 @@ const styles = {
     portfolioItem: { background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '15px', cursor: 'pointer' },
     portfolioName: { color: 'white', margin: '0 0 5px 0' },
     portfolioDate: { color: 'rgba(255,255,255,0.4)', fontSize: '12px', margin: 0 },
+    portfolioMeta: { color: 'rgba(255,255,255,0.35)', fontSize: '11px', margin: '6px 0 0 0' },
     holdingsCard: { background: 'rgba(255,255,255,0.05)', borderRadius: '15px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' },
     holdingsHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     tradeBtn: { background: 'linear-gradient(135deg, #00ff88, #00cc66)', border: 'none', color: '#000', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' },
     tradeForm: { background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' },
+    tradePortfolioText: { color: '#00d4ff', fontSize: '13px', margin: 0 },
+    loadingStocks: { color: 'rgba(255,255,255,0.6)', margin: 0 },
     tradeTypeRow: { display: 'flex', gap: '10px' },
     typeBtn: { flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid', cursor: 'pointer', fontWeight: 'bold' },
-    select: { padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '14px' },
+    select: {
+        padding: '12px',
+        borderRadius: '10px',
+        border: '1px solid rgba(255,255,255,0.2)',
+        background: '#1a1a2e',
+        color: 'white',
+        fontSize: '14px',
+        width: '100%',
+        cursor: 'pointer'
+    },
     input: { padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)', color: 'white', fontSize: '14px' },
     submitBtn: { padding: '12px', borderRadius: '10px', border: 'none', background: 'linear-gradient(135deg, #00d4ff, #0099ff)', color: 'white', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' },
+    message: { padding: '12px 16px', borderRadius: '10px', marginBottom: '20px', fontWeight: 'bold' },
     table: { width: '100%', borderCollapse: 'collapse' },
     th: { color: 'rgba(255,255,255,0.6)', padding: '12px', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' },
     td: { padding: '12px', color: 'white', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)' },

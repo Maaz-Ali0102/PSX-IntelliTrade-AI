@@ -10,6 +10,7 @@ function Stocks() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const navigate = useNavigate();
+    const role = localStorage.getItem('role');
 
     useEffect(() => {
         fetchStocks();
@@ -64,6 +65,9 @@ function Stocks() {
                     <button onClick={() => navigate('/stocks')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Stocks</button>
                     <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
                     <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    {role === 'ADMIN' && (
+                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                    )}
                 </div>
                 <button onClick={() => { localStorage.clear(); navigate('/'); }} style={styles.logoutBtn}>Logout</button>
             </nav>

@@ -26,52 +26,17 @@
   <div>
     <img src="https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white" alt="Oracle" />
     <img src="https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white" alt="NodeJS" />
-    <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
     <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript" />
     <img src="https://img.shields.io/badge/PL%2FSQL-FF6B6B?style=for-the-badge&logo=database&logoColor=white" alt="PL/SQL" />
     <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License: MIT" />
   </div>
-
 </div>
-
----
-
-## 📌 About the Project
-
-PSX IntelliTrade AI is a **production-ready, enterprise-grade** stock portfolio management platform designed specifically for the Pakistan Stock Exchange. Built with Oracle Database 21c, Node.js, and React, it empowers traders and investors with intelligent analytics, real-time alerts, and comprehensive portfolio management tools.
-
-> **Why This Project?**  
-> This demonstrates advanced database design patterns, sophisticated PL/SQL optimization, secure authentication mechanisms, and full-stack application architecture suitable for modern fintech systems.
-
----
-
 ## 📑 Table of Contents
 
-- [✨ Features](#-features)
-- [🛠️ Tech Stack](#️-tech-stack)
-- [📦 What's Included](#-whats-included)
-- [🚀 Getting Started](#-getting-started)
 - [📊 Database Architecture](#-database-architecture)
-- [📁 Project Structure](#-project-structure)
-- [👥 Default Accounts](#-default-accounts)
-- [📸 Screenshots](#-screenshots)
-- [🔧 System Configuration](#-system-configuration)
 - [🤝 Contributing](#-contributing)
-- [📝 License](#-license)
-
----
-
 ## ✨ Features
-
-### 🔐 **Security & Access Control**
-- ✅ Secure user authentication with hashed passwords
-- ✅ Role-based access control (RBAC) — Admin & Investor roles
 - ✅ Session management with permission validation
-- ✅ PL/SQL-based encrypted password storage
-
-### 📊 **Portfolio Management**
-- ✅ Multiple portfolio support per user
-- ✅ Real-time portfolio valuation and updates
 - ✅ Automatic holdings synchronization via database triggers
 - ✅ Buy/Sell transaction recording with instant P&L calculation
 
@@ -83,36 +48,14 @@ PSX IntelliTrade AI is a **production-ready, enterprise-grade** stock portfolio 
 
 ### ⚠️ **Intelligent Alerting System**
 - ✅ Real-time price spike detection
-- ✅ Price drop monitoring and notifications
 - ✅ Customizable alert thresholds per stock
 - ✅ Event-driven architecture with trigger-based notifications
-
-### 📉 **Market Intelligence**
-- ✅ 365+ days of historical price data
-- ✅ 21,900+ simulated trading records
 - ✅ Daily OHLC (Open, High, Low, Close) data
-- ✅ Trend analysis and performance benchmarking
-
----
-
 ## 🛠️ Tech Stack
-
-| **Layer** | **Technology** | **Purpose** |
-|-----------|----------------|-----------|
-| **Database** | Oracle Database 21c XE | ACID-compliant, enterprise relational database |
 | **Database Layer** | PL/SQL | Stored procedures, triggers, functions, analytics |
-| **Backend Runtime** | Node.js 14+ | Asynchronous JavaScript runtime |
-| **Backend Framework** | Express.js 4.x | RESTful API server |
-| **Frontend Framework** | React 17+ | Dynamic user interface components |
-| **Data Visualization** | Recharts | Professional chart library |
-| **Authentication** | Session-based | Custom authentication layer |
 | **Styling** | CSS3/Bootstrap | Responsive design |
 
 ---
-
-## 📦 What's Included
-
-### Database Layer
 - ✔️ **20+ PSX-listed companies** with real-world stock data
 - ✔️ **365-day** historical price records
 - ✔️ **21,900+** simulated trading transactions
@@ -121,7 +64,6 @@ PSX IntelliTrade AI is a **production-ready, enterprise-grade** stock portfolio 
 ### User Management
 - ✔️ 3 pre-configured test accounts
 - ✔️ Secure password hashing mechanism
-- ✔️ Role-based access control system
 - ✔️ Session tracking and validation
 
 ### Analytics Engine
@@ -171,7 +113,6 @@ COMMIT;
 > **Security Note:** For production, use a strong password instead of `psx123`.
 
 ### Step 3: Configure SQL Developer Connection
-
 1. In SQL Developer, click **Connections** → **New Connection**
 2. Enter these parameters:
 
@@ -199,7 +140,6 @@ Execute the SQL scripts in **this exact order** inside your new connection:
 4. database/04_auth_procedures.sql → Authentication functions
 5. database/05_triggers.sql        → Portfolio automation triggers
 6. database/06_analytics.sql       → Analytics views & functions
-7. database/07_alerts.sql          → Alert system setup
 ```
 
 **How to execute:**
@@ -229,7 +169,6 @@ You should see results showing all tables have data.
 
 ---
 
-## 📊 Database Architecture
 
 ### Core Entity-Relationship Model
 
@@ -269,7 +208,6 @@ COMPANIES
 ├── SYMBOL (UK)
 ├── NAME
 └── ...
-
 STOCK_PRICES
 ├── ID (PK)
 ├── COMPANY_ID (FK)
@@ -284,7 +222,6 @@ USERS
 └── ROLE (ADMIN/INVESTOR)
 
 PORTFOLIOS
-├── ID (PK)
 ├── USER_ID (FK)
 ├── NAME
 └── ...
@@ -306,7 +243,6 @@ TRANSACTIONS
 PSX-IntelliTrade-AI/
 │
 ├── 📂 database/
-│   ├── 01_tables.sql              ← Schema definitions & constraints
 │   ├── 02_sequences.sql           ← Auto-increment sequences
 │   ├── 03_seed_data.sql           ← Companies & historical prices
 │   ├── 04_auth_procedures.sql     ← Login & user management
@@ -345,7 +281,6 @@ PSX-IntelliTrade-AI/
 
 ## 👥 Default Accounts
 
-The following test users are pre-configured in the database:
 
 | Username | Password | Role | Department |
 |----------|----------|------|-----------|
@@ -357,40 +292,16 @@ The following test users are pre-configured in the database:
 ```
 Username: ali_investor
 Password: ali123
-```
-
-> ⚠️ **SECURITY WARNING**  
-> These are development credentials only. **Change all passwords in production.**
-
----
 
 ##  📸 Screenshots
-
-### Dashboard
-```
-[Coming Soon]
-Portfolio Overview
-├── Total Value: PKR 500,000
 ├── Holdings Count: 12
 └── Today's Change: +2.5%
 
-Charts
-├── Portfolio Composition (Pie)
-├── Price Trends (Line)
 └── Performance Metrics (Bar)
-```
-
 ### Alerts
-```
-[Coming Soon]
-Active Alerts
-├── ✓ KSE-100 up 3.2%
-├── ✓ HBL down 1.5%
-└── ✓ Transitioned to bullish
 ```
 
 ---
-
 ## 🔧 System Configuration
 
 ### Environment Variables

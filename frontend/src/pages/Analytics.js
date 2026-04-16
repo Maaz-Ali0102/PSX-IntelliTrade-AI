@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getMarketSummary, getSectorPerformance, getRiskScores, getTopGainers, getTopLosers } from '../services/api';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 function Analytics() {
     const [marketData, setMarketData] = useState(null);
@@ -11,6 +11,7 @@ function Analytics() {
     const [losers, setLosers] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const role = localStorage.getItem('role');
 
     useEffect(() => {
         fetchAnalytics();
@@ -57,6 +58,9 @@ function Analytics() {
                     <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
                     <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
                     <button onClick={() => navigate('/analytics')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Analytics</button>
+                    {role === 'ADMIN' && (
+                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                    )}
                 </div>
                 <button onClick={() => { localStorage.clear(); navigate('/'); }} style={styles.logoutBtn}>Logout</button>
             </nav>
@@ -120,15 +124,15 @@ function Analytics() {
                                         { name: 'Low Risk', value: risks.filter(r => r.RISK_LEVEL === 'LOW RISK').length },
                                     ]}
                                     cx="50%"
-                                    cy="50%"
-                                    outerRadius={80}
+                                    cy="45%"
+                                    outerRadius={70}
                                     dataKey="value"
-                                    label={({name, value}) => `${name}: ${value}`}
                                 >
                                     {COLORS.map((color, i) => (
                                         <Cell key={i} fill={color} />
                                     ))}
                                 </Pie>
+                                <Legend verticalAlign="bottom" wrapperStyle={{ paddingTop: '12px' }} />
                                 <Tooltip contentStyle={{background: '#1a1a2e', border: '1px solid #00d4ff'}} />
                             </PieChart>
                         </ResponsiveContainer>

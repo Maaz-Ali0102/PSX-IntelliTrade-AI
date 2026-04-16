@@ -1,15 +1,22 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Stocks from './pages/Stocks';
 import Portfolio from './pages/Portfolio';
 import Analytics from './pages/Analytics';
+import Admin from './pages/Admin';
+
+function hasValidSession() {
+    return localStorage.getItem('isLoggedIn') === 'true'
+        && Boolean(localStorage.getItem('user_id'))
+        && Boolean(localStorage.getItem('username'));
+}
 
 function ProtectedRoute({ children }) {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    const username = localStorage.getItem('username');
-    if (!isLoggedIn || !username) {
+    if (!hasValidSession()) {
+        localStorage.clear();
         return <Navigate to="/" replace />;
     }
     return children;
@@ -20,6 +27,7 @@ function App() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/dashboard" element={
                     <ProtectedRoute><Dashboard /></ProtectedRoute>
                 } />
@@ -31,6 +39,9 @@ function App() {
                 } />
                 <Route path="/analytics" element={
                     <ProtectedRoute><Analytics /></ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                    <ProtectedRoute><Admin /></ProtectedRoute>
                 } />
             </Routes>
         </BrowserRouter>
