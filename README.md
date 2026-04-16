@@ -425,6 +425,7 @@ PSX IntelliTrade AI/
 │   ├── package.json
 │   ├── server.js
 │   └── routes/
+│       ├── admin.js
 │       ├── analytics.js
 │       ├── auth.js
 │       ├── portfolio.js
