@@ -57,6 +57,8 @@ function Analytics() {
                     <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
                     <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
                     <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
+                    <button onClick={() => navigate('/transactions')} style={styles.navBtn}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={styles.navBtn}>Alerts</button>
                     <button onClick={() => navigate('/analytics')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Analytics</button>
                     {role === 'ADMIN' && (
                         <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>

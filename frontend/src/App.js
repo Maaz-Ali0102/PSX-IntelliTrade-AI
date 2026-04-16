@@ -7,6 +7,8 @@ import Stocks from './pages/Stocks';
 import Portfolio from './pages/Portfolio';
 import Analytics from './pages/Analytics';
 import Admin from './pages/Admin';
+import Transactions from './pages/Transactions';
+import Alerts from './pages/Alerts';
 
 function hasValidSession() {
     return localStorage.getItem('isLoggedIn') === 'true'
@@ -39,6 +41,12 @@ function App() {
                 } />
                 <Route path="/analytics" element={
                     <ProtectedRoute><Analytics /></ProtectedRoute>
+                } />
+                <Route path="/transactions" element={
+                    <ProtectedRoute><Transactions /></ProtectedRoute>
+                } />
+                <Route path="/alerts" element={
+                    <ProtectedRoute><Alerts /></ProtectedRoute>
                 } />
                 <Route path="/admin" element={
                     <ProtectedRoute><Admin /></ProtectedRoute>

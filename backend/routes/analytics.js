@@ -131,7 +131,7 @@ router.get('/alerts', async (req, res) => {
         
         const result = await connection.execute(
             `SELECT a.alert_id, c.symbol, c.company_name,
-                    a.alert_type, a.message, a.created_at
+                    a.alert_type, a.message, a.is_read, a.created_at
              FROM alerts a
              JOIN companies c ON a.company_id = c.company_id
              ORDER BY a.created_at DESC`,
@@ -148,6 +148,37 @@ router.get('/alerts', async (req, res) => {
         res.status(500).json({ 
             success: false, 
             message: error.message 
+        });
+    } finally {
+        if (connection) await connection.close();
+    }
+});
+
+// ================================
+// MARK ALERT AS READ
+// PUT /api/analytics/alerts/:alert_id/read
+// ================================
+router.put('/alerts/:alert_id/read', async (req, res) => {
+    let connection;
+    try {
+        connection = await getConnection();
+
+        await connection.execute(
+            `UPDATE alerts
+             SET is_read = 1
+             WHERE alert_id = :alert_id`,
+            { alert_id: req.params.alert_id },
+            { autoCommit: true }
+        );
+
+        res.json({
+            success: true,
+            message: 'Alert marked as read'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     } finally {
         if (connection) await connection.close();

@@ -1,6 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getUserPortfolios, getPortfolioHoldings, createPortfolio, buyStock, sellStock, getAllStocks, getUserByUsername } from '../services/api';
+import {
+    getUserPortfolios,
+    getPortfolioHoldings,
+    createPortfolio,
+    buyStock,
+    sellStock,
+    getAllStocks,
+    getUserByUsername,
+    getPortfolioSummary,
+    getPortfolioRiskScore,
+    getPortfolioGrowth
+} from '../services/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 function Portfolio() {
     const [portfolios, setPortfolios] = useState([]);
@@ -17,6 +29,11 @@ function Portfolio() {
     const [tradeMessage, setTradeMessage] = useState('');
     const [tradeMessageType, setTradeMessageType] = useState('');
     const [loading, setLoading] = useState(true);
+
+    const [summary, setSummary] = useState(null);
+    const [riskScore, setRiskScore] = useState(null);
+    const [growthData, setGrowthData] = useState([]);
+
     const navigate = useNavigate();
 
     const userIdFromStorage = localStorage.getItem('user_id');
@@ -55,7 +72,7 @@ function Portfolio() {
 
             setCurrentUserId(resolvedUserId);
             setStocks(uniqueStocks);
-            setPortfolios(portfoliosRes.data.data);
+            setPortfolios(portfoliosRes.data.data || []);
         } catch (error) {
             console.error('Error:', error);
             setTradeMessage(error.response?.data?.message || error.message || 'Failed to load portfolio data');
@@ -70,15 +87,46 @@ function Portfolio() {
         fetchData();
     }, [fetchData]);
 
+    useEffect(() => {
+        if (tradeMessageType !== 'error' || !tradeMessage) {
+            return undefined;
+        }
+
+        const timerId = setTimeout(() => {
+            setTradeMessage('');
+            setTradeMessageType('');
+        }, 3000);
+
+        return () => clearTimeout(timerId);
+    }, [tradeMessage, tradeMessageType]);
+
+    const fetchPortfolioInsights = useCallback(async (portfolioId) => {
+        try {
+            const [holdingsRes, summaryRes, riskRes, growthRes] = await Promise.all([
+                getPortfolioHoldings(portfolioId),
+                getPortfolioSummary(portfolioId),
+                getPortfolioRiskScore(portfolioId),
+                getPortfolioGrowth(portfolioId)
+            ]);
+
+            const activeHoldings = (holdingsRes.data.data || []).filter((holding) => Number(holding.QUANTITY) > 0);
+            setHoldings(activeHoldings);
+            setSummary(summaryRes.data.data || null);
+            setRiskScore(riskRes.data.data || null);
+
+            const growth = (growthRes.data.data || []).map((row) => ({
+                date: new Date(row.PRICE_DATE).toLocaleDateString(),
+                value: Number(row.PORTFOLIO_VALUE || 0)
+            }));
+            setGrowthData(growth);
+        } catch (error) {
+            console.error('Error loading insights:', error);
+        }
+    }, []);
+
     const handlePortfolioClick = async (portfolio) => {
         setSelectedPortfolio(portfolio);
-        try {
-            const response = await getPortfolioHoldings(portfolio.PORTFOLIO_ID);
-            const activeHoldings = (response.data.data || []).filter((holding) => Number(holding.QUANTITY) > 0);
-            setHoldings(activeHoldings);
-        } catch (error) {
-            console.error('Error:', error);
-        }
+        await fetchPortfolioInsights(portfolio.PORTFOLIO_ID);
     };
 
     const handleCreatePortfolio = async () => {
@@ -119,12 +167,6 @@ function Portfolio() {
         }
     };
 
-    const refreshHoldings = useCallback(async (portfolioId) => {
-        const response = await getPortfolioHoldings(portfolioId);
-        const activeHoldings = (response.data.data || []).filter((holding) => Number(holding.QUANTITY) > 0);
-        setHoldings(activeHoldings);
-    }, []);
-
     const handleTrade = async () => {
         try {
             if (!selectedPortfolio) {
@@ -148,7 +190,7 @@ function Portfolio() {
 
             setShowTradeForm(false);
             setTradeData({ company_id: '', quantity: '', price: '' });
-            await refreshHoldings(selectedPortfolio.PORTFOLIO_ID);
+            await fetchPortfolioInsights(selectedPortfolio.PORTFOLIO_ID);
             setTradeMessage(`${tradeType} successful!`);
             setTradeMessageType('success');
         } catch (error) {
@@ -158,21 +200,28 @@ function Portfolio() {
         }
     };
 
+    const getRiskColor = (level) => {
+        if (level === 'HIGH RISK') return '#ff6b6b';
+        if (level === 'MEDIUM RISK') return '#ffd700';
+        return '#00ff88';
+    };
+
     if (loading) return (
         <div style={styles.loading}>
-            <h2 style={{ color: '#00d4ff' }}>Loading Portfolio... 📊</h2>
+            <h2 style={{ color: '#00d4ff' }}>Loading Portfolio...</h2>
         </div>
     );
 
     return (
         <div style={styles.container}>
-            {/* Navbar */}
             <nav style={styles.navbar}>
-                <h1 style={styles.logo}>📈 PSX IntelliTrade AI</h1>
+                <h1 style={styles.logo}>PSX IntelliTrade AI</h1>
                 <div style={styles.navLinks}>
                     <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
                     <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
-                    <button onClick={() => navigate('/portfolio')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Portfolio</button>
+                    <button onClick={() => navigate('/portfolio')} style={{ ...styles.navBtn, background: 'rgba(0,212,255,0.2)' }}>Portfolio</button>
+                    <button onClick={() => navigate('/transactions')} style={styles.navBtn}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={styles.navBtn}>Alerts</button>
                     <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
                     {role === 'ADMIN' && (
                         <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
@@ -192,7 +241,6 @@ function Portfolio() {
                     </button>
                 </div>
 
-                {/* Create Portfolio Form */}
                 {showCreateForm && (
                     <div style={styles.formCard}>
                         <h3 style={styles.formTitle}>Create New Portfolio</h3>
@@ -212,21 +260,22 @@ function Portfolio() {
                 )}
 
                 {tradeMessage && (
-                    <div style={{
-                        ...styles.message,
-                        background: tradeMessageType === 'success' ? 'rgba(0,255,136,0.12)' : 'rgba(255,107,107,0.12)',
-                        color: tradeMessageType === 'success' ? '#00ff88' : '#ff6b6b'
-                    }}>
+                    <div
+                        style={{
+                            ...styles.message,
+                            background: tradeMessageType === 'success' ? 'rgba(0,255,136,0.12)' : 'rgba(255,107,107,0.12)',
+                            color: tradeMessageType === 'success' ? '#00ff88' : '#ff6b6b'
+                        }}
+                    >
                         {tradeMessage}
                     </div>
                 )}
 
                 <div style={styles.mainGrid}>
-                    {/* Portfolios List */}
                     <div style={styles.portfoliosList}>
                         <h3 style={styles.sectionTitle}>Your Portfolios</h3>
                         {portfolios.length === 0 ? (
-                            <p style={styles.empty}>No portfolios yet — create one!</p>
+                            <p style={styles.empty}>No portfolios yet. Create one.</p>
                         ) : (
                             portfolios.map((p) => (
                                 <div
@@ -240,39 +289,89 @@ function Portfolio() {
                                     }}
                                 >
                                     <h4 style={styles.portfolioName}>{p.PORTFOLIO_NAME}</h4>
-                                    <p style={styles.portfolioDate}>
-                                        Created: {new Date(p.CREATED_AT).toLocaleDateString()}
-                                    </p>
+                                    <p style={styles.portfolioDate}>Created: {new Date(p.CREATED_AT).toLocaleDateString()}</p>
                                     <p style={styles.portfolioMeta}>ID: {p.PORTFOLIO_ID}</p>
                                 </div>
                             ))
                         )}
                     </div>
 
-                    {/* Holdings */}
                     {selectedPortfolio && (
                         <div style={styles.holdingsCard}>
                             <div style={styles.holdingsHeader}>
                                 <h3 style={styles.sectionTitle}>
-                                    {selectedPortfolio.PORTFOLIO_NAME} (ID: {selectedPortfolio.PORTFOLIO_ID}) — Holdings
+                                    {selectedPortfolio.PORTFOLIO_NAME} (ID: {selectedPortfolio.PORTFOLIO_ID})
                                 </h3>
-                                <button
-                                    onClick={() => setShowTradeForm(!showTradeForm)}
-                                    style={styles.tradeBtn}
-                                >
+                                <button onClick={() => setShowTradeForm(!showTradeForm)} style={styles.tradeBtn}>
                                     Trade Stock
                                 </button>
                             </div>
 
-                            {/* Trade Form */}
+                            {summary && (
+                                <div style={styles.summaryGrid}>
+                                    <div style={styles.summaryCard}>
+                                        <p style={styles.cardLabel}>Total Value</p>
+                                        <p style={styles.cardValue}>Rs {Number(summary.TOTAL_VALUE || 0).toFixed(2)}</p>
+                                    </div>
+                                    <div style={styles.summaryCard}>
+                                        <p style={styles.cardLabel}>Total Invested</p>
+                                        <p style={styles.cardValue}>Rs {Number(summary.TOTAL_INVESTED || 0).toFixed(2)}</p>
+                                    </div>
+                                    <div style={styles.summaryCard}>
+                                        <p style={styles.cardLabel}>Overall P and L</p>
+                                        <p style={{ ...styles.cardValue, color: Number(summary.TOTAL_PL || 0) >= 0 ? '#00ff88' : '#ff6b6b' }}>
+                                            Rs {Number(summary.TOTAL_PL || 0).toFixed(2)}
+                                        </p>
+                                    </div>
+                                    <div style={styles.summaryCard}>
+                                        <p style={styles.cardLabel}>Overall P and L %</p>
+                                        <p style={{ ...styles.cardValue, color: Number(summary.TOTAL_PL_PCT || 0) >= 0 ? '#00ff88' : '#ff6b6b' }}>
+                                            {Number(summary.TOTAL_PL_PCT || 0).toFixed(2)}%
+                                        </p>
+                                    </div>
+                                    <div style={styles.summaryCard}>
+                                        <p style={styles.cardLabel}>Total Stocks</p>
+                                        <p style={styles.cardValue}>{Number(summary.TOTAL_STOCKS || 0)}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {riskScore && (
+                                <div style={styles.riskCard}>
+                                    <div>
+                                        <p style={styles.cardLabel}>Portfolio Risk Level</p>
+                                        <p style={{ ...styles.riskLevel, color: getRiskColor(riskScore.PORTFOLIO_RISK) }}>
+                                            {riskScore.PORTFOLIO_RISK}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p style={styles.cardLabel}>Avg Volatility</p>
+                                        <p style={styles.riskLevel}>{Number(riskScore.AVG_VOLATILITY || 0).toFixed(2)}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {growthData.length > 0 && (
+                                <div style={styles.growthCard}>
+                                    <h4 style={styles.chartTitle}>Portfolio Value - Last 30 Days</h4>
+                                    <ResponsiveContainer width="100%" height={220}>
+                                        <LineChart data={growthData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                            <XAxis dataKey="date" stroke="rgba(255,255,255,0.5)" tick={{ fontSize: 10 }} />
+                                            <YAxis stroke="rgba(255,255,255,0.5)" tick={{ fontSize: 10 }} />
+                                            <Tooltip contentStyle={{ background: '#1a1a2e', border: '1px solid #00d4ff' }} />
+                                            <Line type="monotone" dataKey="value" stroke="#00d4ff" strokeWidth={2} dot={false} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+
                             {showTradeForm && (
                                 <div style={styles.tradeForm}>
                                     <p style={styles.tradePortfolioText}>
                                         Trading in: {selectedPortfolio.PORTFOLIO_NAME} (ID: {selectedPortfolio.PORTFOLIO_ID})
                                     </p>
-                                    {stocksLoading ? (
-                                        <p style={styles.loadingStocks}>Loading stocks...</p>
-                                    ) : null}
+                                    {stocksLoading ? <p style={styles.loadingStocks}>Loading stocks...</p> : null}
                                     <div style={styles.tradeTypeRow}>
                                         <button
                                             onClick={() => setTradeType('BUY')}
@@ -293,14 +392,14 @@ function Portfolio() {
                                     </div>
                                     <select
                                         value={tradeData.company_id}
-                                        onChange={(e) => setTradeData({...tradeData, company_id: e.target.value})}
+                                        onChange={(e) => setTradeData({ ...tradeData, company_id: e.target.value })}
                                         style={styles.select}
                                         disabled={stocksLoading}
                                     >
                                         <option value="">{stocksLoading ? 'Loading stocks...' : 'Select Stock'}</option>
                                         {stocks.map((s) => (
                                             <option key={s.COMPANY_ID} value={s.COMPANY_ID}>
-                                                {s.SYMBOL} — ₨{s.CURRENT_PRICE}
+                                                {s.SYMBOL} - Rs {s.CURRENT_PRICE}
                                             </option>
                                         ))}
                                     </select>
@@ -308,14 +407,14 @@ function Portfolio() {
                                         type="number"
                                         placeholder="Quantity"
                                         value={tradeData.quantity}
-                                        onChange={(e) => setTradeData({...tradeData, quantity: e.target.value})}
+                                        onChange={(e) => setTradeData({ ...tradeData, quantity: e.target.value })}
                                         style={styles.input}
                                     />
                                     <input
                                         type="number"
                                         placeholder="Price per share"
                                         value={tradeData.price}
-                                        onChange={(e) => setTradeData({...tradeData, price: e.target.value})}
+                                        onChange={(e) => setTradeData({ ...tradeData, price: e.target.value })}
                                         style={styles.input}
                                     />
                                     <button onClick={handleTrade} style={styles.submitBtn}>
@@ -324,9 +423,8 @@ function Portfolio() {
                                 </div>
                             )}
 
-                            {/* Holdings Table */}
-                            {holdings.filter((holding) => Number(holding.QUANTITY) > 0).length === 0 ? (
-                                <p style={styles.empty}>No holdings yet — buy some stocks!</p>
+                            {holdings.length === 0 ? (
+                                <p style={styles.empty}>No holdings yet. Buy some stocks.</p>
                             ) : (
                                 <table style={styles.table}>
                                     <thead>
@@ -335,30 +433,22 @@ function Portfolio() {
                                             <th style={styles.th}>Qty</th>
                                             <th style={styles.th}>Avg Price</th>
                                             <th style={styles.th}>Current</th>
-                                            <th style={styles.th}>P&L</th>
-                                            <th style={styles.th}>P&L %</th>
+                                            <th style={styles.th}>P and L</th>
+                                            <th style={styles.th}>P and L %</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {holdings.filter((holding) => Number(holding.QUANTITY) > 0).map((h, i) => (
-                                            <tr key={i}>
-                                                <td style={styles.td}>
-                                                    <span style={styles.symbol}>{h.SYMBOL}</span>
-                                                </td>
+                                        {holdings.map((h) => (
+                                            <tr key={h.SYMBOL}>
+                                                <td style={styles.td}><span style={styles.symbol}>{h.SYMBOL}</span></td>
                                                 <td style={styles.td}>{h.QUANTITY}</td>
-                                                <td style={styles.td}>₨{h.AVG_BUY_PRICE}</td>
-                                                <td style={styles.td}>₨{h.CURRENT_PRICE}</td>
-                                                <td style={{
-                                                    ...styles.td,
-                                                    color: h.PROFIT_LOSS >= 0 ? '#00ff88' : '#ff6b6b'
-                                                }}>
-                                                    ₨{h.PROFIT_LOSS}
+                                                <td style={styles.td}>Rs {Number(h.AVG_BUY_PRICE || 0).toFixed(2)}</td>
+                                                <td style={styles.td}>Rs {Number(h.CURRENT_PRICE || 0).toFixed(2)}</td>
+                                                <td style={{ ...styles.td, color: Number(h.PROFIT_LOSS || 0) >= 0 ? '#00ff88' : '#ff6b6b' }}>
+                                                    Rs {Number(h.PROFIT_LOSS || 0).toFixed(2)}
                                                 </td>
-                                                <td style={{
-                                                    ...styles.td,
-                                                    color: h.PL_PERCENTAGE >= 0 ? '#00ff88' : '#ff6b6b'
-                                                }}>
-                                                    {h.PL_PERCENTAGE}%
+                                                <td style={{ ...styles.td, color: Number(h.PL_PERCENTAGE || 0) >= 0 ? '#00ff88' : '#ff6b6b' }}>
+                                                    {Number(h.PL_PERCENTAGE || 0).toFixed(2)}%
                                                 </td>
                                             </tr>
                                         ))}
@@ -378,7 +468,7 @@ const styles = {
     loading: { minHeight: '100vh', background: '#0a0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     navbar: { background: 'rgba(255,255,255,0.05)', padding: '15px 30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)' },
     logo: { color: '#00d4ff', margin: 0, fontSize: '20px' },
-    navLinks: { display: 'flex', gap: '10px' },
+    navLinks: { display: 'flex', gap: '10px', flexWrap: 'wrap' },
     navBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' },
     logoutBtn: { background: '#ff6b6b', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' },
     content: { padding: '30px' },
@@ -399,6 +489,14 @@ const styles = {
     holdingsCard: { background: 'rgba(255,255,255,0.05)', borderRadius: '15px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)' },
     holdingsHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
     tradeBtn: { background: 'linear-gradient(135deg, #00ff88, #00cc66)', border: 'none', color: '#000', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold' },
+    summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px', marginBottom: '16px' },
+    summaryCard: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(0,212,255,0.2)', borderRadius: '10px', padding: '12px' },
+    cardLabel: { margin: '0 0 6px 0', color: 'rgba(255,255,255,0.65)', fontSize: '12px' },
+    cardValue: { margin: 0, color: '#00d4ff', fontSize: '16px', fontWeight: 'bold' },
+    riskCard: { display: 'flex', justifyContent: 'space-between', gap: '20px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '14px', marginBottom: '16px' },
+    riskLevel: { margin: 0, fontSize: '18px', fontWeight: 'bold' },
+    growthCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '12px', marginBottom: '16px' },
+    chartTitle: { margin: '0 0 10px 0', color: '#00d4ff' },
     tradeForm: { background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '20px', marginBottom: '20px', display: 'flex', flexDirection: 'column', gap: '10px' },
     tradePortfolioText: { color: '#00d4ff', fontSize: '13px', margin: 0 },
     loadingStocks: { color: 'rgba(255,255,255,0.6)', margin: 0 },
@@ -420,7 +518,7 @@ const styles = {
     table: { width: '100%', borderCollapse: 'collapse' },
     th: { color: 'rgba(255,255,255,0.6)', padding: '12px', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' },
     td: { padding: '12px', color: 'white', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-    symbol: { background: 'rgba(0,212,255,0.2)', color: '#00d4ff', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' },
+    symbol: { background: 'rgba(0,212,255,0.2)', color: '#00d4ff', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' }
 };
 
 export default Portfolio;

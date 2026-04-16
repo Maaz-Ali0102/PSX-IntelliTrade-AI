@@ -23,8 +23,11 @@ export const registerUser = (data) =>
 export const getAllStocks = () => 
     API.get('/stocks');
 
-export const getStockHistory = (symbol) => 
-    API.get(`/stocks/${symbol}/history`);
+export const getStockHistory = (symbol, days = 30) => 
+    API.get(`/stocks/${symbol}/history?days=${days}`);
+
+export const getStockDetail = (symbol) =>
+    API.get('/stocks/' + symbol + '/detail');
 
 export const getTopGainers = () => 
     API.get('/stocks/gainers');
@@ -47,6 +50,18 @@ export const createPortfolio = (data) =>
 export const getPortfolioHoldings = (portfolioId) => 
     API.get(`/portfolio/${portfolioId}/holdings`);
 
+export const getUserTransactions = (userId) =>
+    API.get('/portfolio/' + userId + '/transactions');
+
+export const getPortfolioSummary = (portfolioId) =>
+    API.get('/portfolio/' + portfolioId + '/summary');
+
+export const getPortfolioRiskScore = (portfolioId) =>
+    API.get('/portfolio/' + portfolioId + '/risk');
+
+export const getPortfolioGrowth = (portfolioId) =>
+    API.get('/portfolio/' + portfolioId + '/growth');
+
 export const buyStock = (data) => 
     API.post('/portfolio/buy', data);
 
@@ -64,6 +79,9 @@ export const getSectorPerformance = () =>
 
 export const getAlerts = () => 
     API.get('/analytics/alerts');
+
+export const markAlertRead = (alertId) =>
+    API.put('/analytics/alerts/' + alertId + '/read');
 
 export const getPortfolioRisk = (portfolioId) => 
     API.get(`/analytics/risk/${portfolioId}`);

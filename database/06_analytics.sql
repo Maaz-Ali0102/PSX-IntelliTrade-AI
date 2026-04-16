@@ -17,7 +17,10 @@ SELECT
     sp.close_price AS current_price,
     ROUND(h.quantity * sp.close_price, 2) AS current_value,
     ROUND((h.quantity * sp.close_price) - h.total_invested, 2) AS profit_loss,
-    ROUND(((h.quantity * sp.close_price) - h.total_invested) / h.total_invested * 100, 2) AS pl_percentage
+    CASE
+        WHEN h.total_invested = 0 THEN 0
+        ELSE ROUND(((h.quantity * sp.close_price) - h.total_invested) / h.total_invested * 100, 2)
+    END AS pl_percentage
 FROM holdings h
 JOIN portfolios p ON h.portfolio_id = p.portfolio_id
 JOIN users u ON p.user_id = u.user_id
