@@ -161,6 +161,8 @@ Oracle Database 21c XE (Port 1521)
 ## 6. Database Design
 
 ### Tables (7)
+![PSX IntelliTrade AI - Database ERD](database/ERD.png)
+
 1. COMPANIES - PSX listed companies  
    Columns: company_id, symbol, company_name, sector, listed_date, is_active
 
