@@ -88,3 +88,39 @@ export const getPortfolioRisk = (portfolioId) =>
 
 export const activateUser = (userId) =>
     API.put('/admin/users/' + userId + '/activate');
+
+// ================================
+// WATCHLIST APIs
+// ================================
+export const getUserWatchlist = (userId) =>
+    API.get('/watchlist/' + userId);
+
+export const addToWatchlist = (data) =>
+    API.post('/watchlist/add', data);
+
+export const removeFromWatchlist = (data) =>
+    API.delete('/watchlist/remove', { data });
+
+// ================================
+// MARKET INDICES APIs
+// ================================
+export const getAllIndices = () =>
+    API.get('/indices');
+
+export const getIndexStocks = (indexId) =>
+    API.get('/indices/' + indexId + '/stocks');
+
+// ================================
+// NEWS APIs
+// ================================
+export const getAllNews = () =>
+    API.get('/news');
+
+export const getLatestNews = () =>
+    API.get('/news/latest');
+
+export const getNewsById = (newsId) =>
+    API.get('/news/' + newsId);
+
+export const getNewsByCompany = (companyId) =>
+    API.get('/news/company/' + companyId);

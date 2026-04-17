@@ -160,7 +160,7 @@ Oracle Database 21c XE (Port 1521)
 
 ## 6. Database Design
 
-### Tables (7)
+### Tables (12)
 ![PSX IntelliTrade AI - Database ERD](database/ERD.png)
 
 1. COMPANIES - PSX listed companies  
@@ -184,6 +184,26 @@ Oracle Database 21c XE (Port 1521)
 7. ALERTS - Market alerts  
    Columns: alert_id, company_id, alert_type, message, created_at, is_read
 
+8. WATCHLIST - User stock watchlist  
+   Columns: watchlist_id, user_id FK, company_id FK, added_date, notes  
+   Purpose: Many-to-Many between USERS and COMPANIES
+
+9. MARKET_INDICES - PSX market indices  
+   Columns: index_id, index_name, description, base_value, launch_date  
+   Data: KSE-5, KSE-10, KSE All Share
+
+10. INDEX_COMPONENTS - Market index compositions  
+   Columns: component_id, index_id FK, company_id FK, weightage, added_date  
+   Purpose: Many-to-Many between MARKET_INDICES and COMPANIES
+
+11. NEWS - Market news articles  
+   Columns: news_id, title, content, source, category, published_date  
+   Data: 10 news articles from Dawn, ARY, Geo etc
+
+12. COMPANY_NEWS - News to company relationships  
+   Columns: cn_id, news_id FK, company_id FK, impact, added_date  
+   Purpose: Many-to-Many between NEWS and COMPANIES
+
 ### Views (3)
 1. PORTFOLIO_ANALYTICS
 - Calculates portfolio value, P and L, P and L percent.
@@ -197,6 +217,24 @@ Oracle Database 21c XE (Port 1521)
 - Compares today versus yesterday prices.
 - Uses RANK for gainers and losers.
 - Calculates percentage change.
+
+All 3 views (`portfolio_analytics`, `stock_risk`, `top_gainers_losers`) are used by new routes as well.
+
+### Many-to-Many Relationships
+1. USERS ↔ COMPANIES through WATCHLIST
+- One user can watch many companies.
+- One company can be watched by many users.
+- Extra attributes: added_date, notes.
+
+2. MARKET_INDICES ↔ COMPANIES through INDEX_COMPONENTS
+- One index contains many companies.
+- One company can be in many indices.
+- Extra attributes: weightage, added_date.
+
+3. NEWS ↔ COMPANIES through COMPANY_NEWS
+- One news article can affect many companies.
+- One company can have many news articles.
+- Extra attributes: impact, added_date.
 
 ### Database Updates
 1. portfolio_analytics VIEW updated:
@@ -219,6 +257,13 @@ Oracle Database 21c XE (Port 1521)
 - Price cannot be 0.
 - Quantity cannot be 0.
 - Returns proper error messages.
+
+5. New Tables Added (Phase 2):
+- WATCHLIST: User stock watchlist with notes.
+- MARKET_INDICES: KSE-5, KSE-10, KSE All Share.
+- INDEX_COMPONENTS: Company weightages in indices.
+- NEWS: 10 market news articles.
+- COMPANY_NEWS: News-to-company mapping with impact tracking.
 
 ---
 
@@ -343,6 +388,27 @@ Oracle Database 21c XE (Port 1521)
 | PUT | /api/admin/users/:id/deactivate | Deactivate user |
 | PUT | /api/admin/users/:id/activate | Activate user |
 
+### Watchlist
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | /api/watchlist/:user_id | Get user watchlist |
+| POST | /api/watchlist/add | Add stock to watchlist |
+| DELETE | /api/watchlist/remove | Remove from watchlist |
+
+### Market Indices
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | /api/indices | Get all indices |
+| GET | /api/indices/:index_id/stocks | Get index stocks |
+
+### News
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | /api/news | Get all news |
+| GET | /api/news/latest | Latest 5 news |
+| GET | /api/news/:news_id | Single news + companies |
+| GET | /api/news/company/:company_id | Company news |
+
 ---
 
 ## 10. Installation and Setup
@@ -430,8 +496,11 @@ PSX IntelliTrade AI/
 │       ├── admin.js
 │       ├── analytics.js
 │       ├── auth.js
+│       ├── indices.js
+│       ├── news.js
 │       ├── portfolio.js
-│       └── stocks.js
+│       ├── stocks.js
+│       └── watchlist.js
 ├── database/
 │   ├── 01_tables.sql
 │   ├── 02_sequences.sql
@@ -439,7 +508,11 @@ PSX IntelliTrade AI/
 │   ├── 04_auth_procedures.sql
 │   ├── 05_triggers.sql
 │   ├── 06_analytics.sql
-│   └── 07_alerts.sql
+│   ├── 07_alerts.sql
+│   ├── 08_watchlist.sql
+│   ├── 09_market_indices.sql
+│   ├── 10_news.sql
+│   └── 11_seed_new_data.sql
 └── frontend/
     ├── package.json
     ├── README.md
