@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getAlerts, markAlertRead } from '../services/api';
 
 function Alerts() {
@@ -7,7 +7,12 @@ function Alerts() {
     const [filter, setFilter] = useState('ALL');
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
     const role = localStorage.getItem('role');
+
+    const getNavBtnStyle = (path) => location.pathname === path
+        ? { ...styles.navBtn, background: 'rgba(0,212,255,0.2)', border: '1px solid #00d4ff', color: '#00d4ff' }
+        : styles.navBtn;
 
     const fetchAlerts = async () => {
         try {
@@ -55,14 +60,17 @@ function Alerts() {
             <nav style={styles.navbar}>
                 <h1 style={styles.logo}>PSX IntelliTrade AI</h1>
                 <div style={styles.navLinks}>
-                    <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
-                    <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
-                    <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
-                    <button onClick={() => navigate('/transactions')} style={styles.navBtn}>Transactions</button>
-                    <button onClick={() => navigate('/alerts')} style={{ ...styles.navBtn, background: 'rgba(0,212,255,0.2)' }}>Alerts</button>
-                    <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    <button onClick={() => navigate('/dashboard')} style={getNavBtnStyle('/dashboard')}>Dashboard</button>
+                    <button onClick={() => navigate('/stocks')} style={getNavBtnStyle('/stocks')}>Stocks</button>
+                    <button onClick={() => navigate('/portfolio')} style={getNavBtnStyle('/portfolio')}>Portfolio</button>
+                    <button onClick={() => navigate('/watchlist')} style={getNavBtnStyle('/watchlist')}>Watchlist</button>
+                    <button onClick={() => navigate('/transactions')} style={getNavBtnStyle('/transactions')}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={getNavBtnStyle('/alerts')}>Alerts</button>
+                    <button onClick={() => navigate('/indices')} style={getNavBtnStyle('/indices')}>Indices</button>
+                    <button onClick={() => navigate('/news')} style={getNavBtnStyle('/news')}>News</button>
+                    <button onClick={() => navigate('/analytics')} style={getNavBtnStyle('/analytics')}>Analytics</button>
                     {role === 'ADMIN' && (
-                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                        <button onClick={() => navigate('/admin')} style={getNavBtnStyle('/admin')}>Admin Panel</button>
                     )}
                 </div>
                 <button onClick={() => { localStorage.clear(); navigate('/'); }} style={styles.logoutBtn}>Logout</button>

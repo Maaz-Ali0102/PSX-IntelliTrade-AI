@@ -9,11 +9,13 @@ import Analytics from './pages/Analytics';
 import Admin from './pages/Admin';
 import Transactions from './pages/Transactions';
 import Alerts from './pages/Alerts';
+import Watchlist from './pages/Watchlist';
+import MarketIndices from './pages/MarketIndices';
+import News from './pages/News';
 
 function hasValidSession() {
     return localStorage.getItem('isLoggedIn') === 'true'
-        && Boolean(localStorage.getItem('user_id'))
-        && Boolean(localStorage.getItem('username'));
+    && Boolean(localStorage.getItem('user_id'));
 }
 
 function ProtectedRoute({ children }) {
@@ -39,6 +41,9 @@ function App() {
                 <Route path="/portfolio" element={
                     <ProtectedRoute><Portfolio /></ProtectedRoute>
                 } />
+                <Route path="/watchlist" element={
+                    <ProtectedRoute><Watchlist /></ProtectedRoute>
+                } />
                 <Route path="/analytics" element={
                     <ProtectedRoute><Analytics /></ProtectedRoute>
                 } />
@@ -47,6 +52,12 @@ function App() {
                 } />
                 <Route path="/alerts" element={
                     <ProtectedRoute><Alerts /></ProtectedRoute>
+                } />
+                <Route path="/indices" element={
+                    <ProtectedRoute><MarketIndices /></ProtectedRoute>
+                } />
+                <Route path="/news" element={
+                    <ProtectedRoute><News /></ProtectedRoute>
                 } />
                 <Route path="/admin" element={
                     <ProtectedRoute><Admin /></ProtectedRoute>

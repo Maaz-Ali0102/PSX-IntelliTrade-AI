@@ -83,3 +83,58 @@ CREATE TABLE alerts (
     is_read         NUMBER(1) DEFAULT 0,
     FOREIGN KEY (company_id) REFERENCES companies(company_id)
 );
+
+-- -- 8. WATCHLIST TABLE
+-- CREATE TABLE watchlist (
+--     watchlist_id    NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     user_id         NUMBER NOT NULL,
+--     company_id      NUMBER NOT NULL,
+--     added_date      DATE DEFAULT SYSDATE,
+--     notes           VARCHAR2(200),
+--     FOREIGN KEY (user_id) REFERENCES users(user_id),
+--     FOREIGN KEY (company_id) REFERENCES companies(company_id),
+--     CONSTRAINT uq_watchlist UNIQUE (user_id, company_id)
+-- );
+
+-- -- 9. MARKET INDICES TABLE
+-- CREATE TABLE market_indices (
+--     index_id        NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     index_name      VARCHAR2(50) NOT NULL UNIQUE,
+--     description     VARCHAR2(200),
+--     base_value      NUMBER(10,2),
+--     launch_date     DATE
+-- );
+
+-- -- 10. INDEX COMPONENTS TABLE
+-- CREATE TABLE index_components (
+--     component_id    NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     index_id        NUMBER NOT NULL,
+--     company_id      NUMBER NOT NULL,
+--     weightage       NUMBER(5,2),
+--     added_date      DATE DEFAULT SYSDATE,
+--     FOREIGN KEY (index_id) REFERENCES market_indices(index_id),
+--     FOREIGN KEY (company_id) REFERENCES companies(company_id),
+--     CONSTRAINT uq_index_comp UNIQUE (index_id, company_id)
+-- );
+
+-- -- 11. NEWS TABLE
+-- CREATE TABLE news (
+--     news_id         NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     title           VARCHAR2(200) NOT NULL,
+--     content         VARCHAR2(1000),
+--     source          VARCHAR2(100),
+--     category        VARCHAR2(50),
+--     published_date  DATE DEFAULT SYSDATE
+-- );
+
+-- -- 12. COMPANY NEWS TABLE
+-- CREATE TABLE company_news (
+--     cn_id           NUMBER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+--     news_id         NUMBER NOT NULL,
+--     company_id      NUMBER NOT NULL,
+--     impact          VARCHAR2(10),
+--     added_date      DATE DEFAULT SYSDATE,
+--     FOREIGN KEY (news_id) REFERENCES news(news_id),
+--     FOREIGN KEY (company_id) REFERENCES companies(company_id),
+--     CONSTRAINT uq_company_news UNIQUE (news_id, company_id)
+-- );

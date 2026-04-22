@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getMarketSummary, getTopGainers, getTopLosers, getAlerts } from '../services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getMarketSummary, getTopGainers, getTopLosers, getAlerts, getLatestNews } from '../services/api';
 
 function Dashboard() {
     const [marketData, setMarketData] = useState(null);
     const [gainers, setGainers] = useState([]);
     const [losers, setLosers] = useState([]);
     const [alerts, setAlerts] = useState([]);
+    const [latestNews, setLatestNews] = useState([]);
     const [loading, setLoading] = useState(true);
     
     const navigate = useNavigate();
+    const location = useLocation();
     const username = localStorage.getItem('username');
     const role = localStorage.getItem('role');
+
+    const getNavBtnStyle = (path) => location.pathname === path
+        ? { ...styles.navBtn, background: 'rgba(0,212,255,0.2)', border: '1px solid #00d4ff', color: '#00d4ff' }
+        : styles.navBtn;
 
     // Page load hone pe data fetch karo
     useEffect(() => {
@@ -21,17 +27,19 @@ function Dashboard() {
     const fetchDashboardData = async () => {
         try {
             // Sab APIs parallel mein call karo
-            const [market, gainerRes, loserRes, alertRes] = await Promise.all([
+            const [market, gainerRes, loserRes, alertRes, latestNewsRes] = await Promise.all([
                 getMarketSummary(),
                 getTopGainers(),
                 getTopLosers(),
-                getAlerts()
+                getAlerts(),
+                getLatestNews()
             ]);
             
             setMarketData(market.data.data);
             setGainers(gainerRes.data.data);
             setLosers(loserRes.data.data);
             setAlerts(alertRes.data.data);
+            setLatestNews(latestNewsRes.data.data || []);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -56,14 +64,17 @@ function Dashboard() {
             <nav style={styles.navbar}>
                 <h1 style={styles.logo}>📈 PSX IntelliTrade AI</h1>
                 <div style={styles.navLinks}>
-                    <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
-                    <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
-                    <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
-                    <button onClick={() => navigate('/transactions')} style={styles.navBtn}>Transactions</button>
-                    <button onClick={() => navigate('/alerts')} style={styles.navBtn}>Alerts</button>
-                    <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    <button onClick={() => navigate('/dashboard')} style={getNavBtnStyle('/dashboard')}>Dashboard</button>
+                    <button onClick={() => navigate('/stocks')} style={getNavBtnStyle('/stocks')}>Stocks</button>
+                    <button onClick={() => navigate('/portfolio')} style={getNavBtnStyle('/portfolio')}>Portfolio</button>
+                    <button onClick={() => navigate('/watchlist')} style={getNavBtnStyle('/watchlist')}>Watchlist</button>
+                    <button onClick={() => navigate('/transactions')} style={getNavBtnStyle('/transactions')}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={getNavBtnStyle('/alerts')}>Alerts</button>
+                    <button onClick={() => navigate('/indices')} style={getNavBtnStyle('/indices')}>Indices</button>
+                    <button onClick={() => navigate('/news')} style={getNavBtnStyle('/news')}>News</button>
+                    <button onClick={() => navigate('/analytics')} style={getNavBtnStyle('/analytics')}>Analytics</button>
                     {role === 'ADMIN' && (
-                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                        <button onClick={() => navigate('/admin')} style={getNavBtnStyle('/admin')}>Admin Panel</button>
                     )}
                 </div>
                 <div style={styles.userInfo}>
@@ -174,6 +185,23 @@ function Dashboard() {
                         ))}
                     </div>
                 </div>
+
+                <div style={styles.newsCard}>
+                    <div style={styles.newsHeader}>
+                        <h3 style={styles.tableTitle}>📰 Latest News</h3>
+                        <button style={styles.newsBtn} onClick={() => navigate('/news')}>View All</button>
+                    </div>
+                    <div style={styles.alertsList}>
+                        {latestNews.length === 0 ? (
+                            <p style={styles.alertMsg}>No latest news available.</p>
+                        ) : latestNews.map((item) => (
+                            <div key={item.NEWS_ID} style={styles.newsItem}>
+                                <p style={styles.newsTitle}>{item.TITLE}</p>
+                                <p style={styles.alertMsg}>{item.SOURCE} - {new Date(item.PUBLISHED_DATE).toLocaleDateString()} - {item.CATEGORY}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
@@ -208,6 +236,11 @@ const styles = {
     alertSymbol: { color: '#00d4ff', fontWeight: 'bold', minWidth: '60px' },
     alertType: { fontSize: '12px', padding: '3px 8px', background: 'rgba(255,255,255,0.1)', borderRadius: '20px' },
     alertMsg: { color: 'rgba(255,255,255,0.6)', fontSize: '13px' },
+    newsCard: { background: 'rgba(255,255,255,0.05)', borderRadius: '15px', padding: '20px', border: '1px solid rgba(255,255,255,0.1)', marginTop: '20px' },
+    newsHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+    newsBtn: { background: 'transparent', color: '#00d4ff', border: '1px solid #00d4ff', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer' },
+    newsItem: { padding: '10px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px' },
+    newsTitle: { margin: '0 0 6px 0', color: 'white' }
 };
 
 export default Dashboard;

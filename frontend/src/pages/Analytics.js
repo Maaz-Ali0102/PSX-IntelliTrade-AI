@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getMarketSummary, getSectorPerformance, getRiskScores, getTopGainers, getTopLosers } from '../services/api';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { getMarketSummary, getSectorPerformance, getRiskScores, getTopGainers, getTopLosers, getAllIndices, getIndexStocks } from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 
 function Analytics() {
@@ -9,9 +9,17 @@ function Analytics() {
     const [risks, setRisks] = useState([]);
     const [gainers, setGainers] = useState([]);
     const [losers, setLosers] = useState([]);
+    const [indices, setIndices] = useState([]);
+    const [selectedIndex, setSelectedIndex] = useState(null);
+    const [indexStocks, setIndexStocks] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
     const role = localStorage.getItem('role');
+
+    const getNavBtnStyle = (path) => location.pathname === path
+        ? { ...styles.navBtn, background: 'rgba(0,212,255,0.2)', border: '1px solid #00d4ff', color: '#00d4ff' }
+        : styles.navBtn;
 
     useEffect(() => {
         fetchAnalytics();
@@ -19,12 +27,13 @@ function Analytics() {
 
     const fetchAnalytics = async () => {
         try {
-            const [market, sectorRes, riskRes, gainerRes, loserRes] = await Promise.all([
+            const [market, sectorRes, riskRes, gainerRes, loserRes, indicesRes] = await Promise.all([
                 getMarketSummary(),
                 getSectorPerformance(),
                 getRiskScores(),
                 getTopGainers(),
-                getTopLosers()
+                getTopLosers(),
+                getAllIndices()
             ]);
 
             setMarketData(market.data.data);
@@ -32,10 +41,29 @@ function Analytics() {
             setRisks(riskRes.data.data);
             setGainers(gainerRes.data.data);
             setLosers(loserRes.data.data);
+
+            const idx = indicesRes.data.data || [];
+            setIndices(idx);
+            if (idx.length > 0) {
+                setSelectedIndex(idx[0]);
+                const stocksRes = await getIndexStocks(idx[0].INDEX_ID);
+                setIndexStocks(stocksRes.data.data || []);
+            }
         } catch (error) {
             console.error('Error:', error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleIndexSelect = async (index) => {
+        setSelectedIndex(index);
+        try {
+            const stocksRes = await getIndexStocks(index.INDEX_ID);
+            setIndexStocks(stocksRes.data.data || []);
+        } catch (error) {
+            console.error('Error loading index stocks:', error);
+            setIndexStocks([]);
         }
     };
 
@@ -54,14 +82,17 @@ function Analytics() {
             <nav style={styles.navbar}>
                 <h1 style={styles.logo}>📈 PSX IntelliTrade AI</h1>
                 <div style={styles.navLinks}>
-                    <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
-                    <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
-                    <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
-                    <button onClick={() => navigate('/transactions')} style={styles.navBtn}>Transactions</button>
-                    <button onClick={() => navigate('/alerts')} style={styles.navBtn}>Alerts</button>
-                    <button onClick={() => navigate('/analytics')} style={{...styles.navBtn, background: 'rgba(0,212,255,0.2)'}}>Analytics</button>
+                    <button onClick={() => navigate('/dashboard')} style={getNavBtnStyle('/dashboard')}>Dashboard</button>
+                    <button onClick={() => navigate('/stocks')} style={getNavBtnStyle('/stocks')}>Stocks</button>
+                    <button onClick={() => navigate('/portfolio')} style={getNavBtnStyle('/portfolio')}>Portfolio</button>
+                    <button onClick={() => navigate('/watchlist')} style={getNavBtnStyle('/watchlist')}>Watchlist</button>
+                    <button onClick={() => navigate('/transactions')} style={getNavBtnStyle('/transactions')}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={getNavBtnStyle('/alerts')}>Alerts</button>
+                    <button onClick={() => navigate('/indices')} style={getNavBtnStyle('/indices')}>Indices</button>
+                    <button onClick={() => navigate('/news')} style={getNavBtnStyle('/news')}>News</button>
+                    <button onClick={() => navigate('/analytics')} style={getNavBtnStyle('/analytics')}>Analytics</button>
                     {role === 'ADMIN' && (
-                        <button onClick={() => navigate('/admin')} style={styles.navBtn}>Admin Panel</button>
+                        <button onClick={() => navigate('/admin')} style={getNavBtnStyle('/admin')}>Admin Panel</button>
                     )}
                 </div>
                 <button onClick={() => { localStorage.clear(); navigate('/'); }} style={styles.logoutBtn}>Logout</button>
@@ -217,6 +248,50 @@ function Analytics() {
                         </tbody>
                     </table>
                 </div>
+
+                <div style={styles.tableCard}>
+                    <h3 style={styles.chartTitle}>Market Indices Overview</h3>
+                    <div style={styles.indexCards}>
+                        {indices.map((idx) => (
+                            <button
+                                key={idx.INDEX_ID}
+                                onClick={() => handleIndexSelect(idx)}
+                                style={{
+                                    ...styles.indexCard,
+                                    background: selectedIndex?.INDEX_ID === idx.INDEX_ID ? 'rgba(255,215,0,0.12)' : 'rgba(255,255,255,0.03)'
+                                }}
+                            >
+                                <p style={styles.indexName}>{idx.INDEX_NAME}</p>
+                                <p style={styles.indexBase}>Base: {Number(idx.BASE_VALUE || 0).toFixed(2)}</p>
+                            </button>
+                        ))}
+                    </div>
+
+                    <table style={styles.table}>
+                        <thead>
+                            <tr>
+                                <th style={styles.th}>Symbol</th>
+                                <th style={styles.th}>Company</th>
+                                <th style={styles.th}>Weightage%</th>
+                                <th style={styles.th}>Price</th>
+                                <th style={styles.th}>Change%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {indexStocks.length === 0 ? (
+                                <tr><td colSpan={5} style={{ ...styles.td, textAlign: 'center', color: 'rgba(255,255,255,0.6)' }}>No index stocks available.</td></tr>
+                            ) : indexStocks.map((stock) => (
+                                <tr key={`${selectedIndex?.INDEX_ID || 'idx'}-${stock.SYMBOL}`}>
+                                    <td style={styles.td}><span style={styles.symbol}>{stock.SYMBOL}</span></td>
+                                    <td style={styles.td}>{stock.COMPANY_NAME}</td>
+                                    <td style={styles.td}>{Number(stock.WEIGHTAGE || 0).toFixed(2)}%</td>
+                                    <td style={styles.td}>Rs {Number(stock.CURRENT_PRICE || 0).toFixed(2)}</td>
+                                    <td style={{ ...styles.td, color: Number(stock.PCT_CHANGE || 0) >= 0 ? '#00ff88' : '#ff6b6b' }}>{Number(stock.PCT_CHANGE || 0).toFixed(2)}%</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
@@ -244,6 +319,10 @@ const styles = {
     th: { color: 'rgba(255,255,255,0.6)', padding: '12px', textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.1)', fontSize: '13px' },
     td: { padding: '12px', color: 'white', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)' },
     symbol: { background: 'rgba(0,212,255,0.2)', color: '#00d4ff', padding: '4px 8px', borderRadius: '6px', fontWeight: 'bold' },
+    indexCards: { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '14px' },
+    indexCard: { border: '1px solid rgba(255,215,0,0.45)', borderRadius: '10px', color: 'white', padding: '10px', textAlign: 'left', cursor: 'pointer' },
+    indexName: { margin: 0, color: '#ffd700', fontWeight: 'bold' },
+    indexBase: { margin: '6px 0 0 0', color: 'rgba(255,255,255,0.7)', fontSize: '12px' },
 };
 
 export default Analytics;

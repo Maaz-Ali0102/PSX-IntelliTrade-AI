@@ -14,6 +14,7 @@ router.get('/:user_id', async (req, res) => {
 
         const result = await connection.execute(
             `SELECT w.watchlist_id,
+                    c.company_id,
                     c.symbol,
                     c.company_name,
                     c.sector,
@@ -60,56 +61,40 @@ router.post('/add', async (req, res) => {
     try {
         connection = await getConnection();
 
-        const activeUser = await connection.execute(
-            `SELECT COUNT(*) AS user_count
-             FROM users
-             WHERE user_id = :user_id
-             AND is_active = 1`,
-            { user_id },
-            { outFormat: oracledb.OUT_FORMAT_OBJECT }
-        );
-
-        const userCountRow = activeUser.rows[0] || {};
-        const userCount = userCountRow.USER_COUNT || userCountRow.user_count || 0;
-        if (userCount === 0) {
-            return res.status(400).json({
-                success: false,
-                message: 'Watchlist is only available for active users'
-            });
-        }
-
-        const existingItem = await connection.execute(
-            `SELECT COUNT(*) AS watch_count
+        const check = await connection.execute(
+            `SELECT watchlist_id
              FROM watchlist
              WHERE user_id = :user_id
              AND company_id = :company_id`,
-            { user_id, company_id },
+            {
+                user_id: Number(user_id),
+                company_id: Number(company_id)
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        const watchCountRow = existingItem.rows[0] || {};
-        const watchCount = watchCountRow.WATCH_COUNT || watchCountRow.watch_count || 0;
-        if (watchCount > 0) {
+        if (check.rows.length > 0) {
             return res.status(409).json({
                 success: false,
-                message: 'Stock already exists in watchlist'
+                message: 'Already in watchlist!'
             });
         }
 
         await connection.execute(
-            `INSERT INTO watchlist (user_id, company_id, notes)
+            `INSERT INTO watchlist
+             (user_id, company_id, notes)
              VALUES (:user_id, :company_id, :notes)`,
             {
-                user_id,
-                company_id,
-                notes: notes || null
+                user_id: Number(user_id),
+                company_id: Number(company_id),
+                notes: notes || ''
             },
             { autoCommit: true }
         );
 
         res.json({
             success: true,
-            message: 'Stock added to watchlist successfully'
+            message: 'Added to watchlist!'
         });
     } catch (error) {
         res.status(500).json({
@@ -132,18 +117,19 @@ router.delete('/remove', async (req, res) => {
     try {
         connection = await getConnection();
 
-        const existingItem = await connection.execute(
-            `SELECT COUNT(*) AS watch_count
+        const check = await connection.execute(
+            `SELECT watchlist_id
              FROM watchlist
              WHERE user_id = :user_id
              AND company_id = :company_id`,
-            { user_id, company_id },
+            {
+                user_id: Number(user_id),
+                company_id: Number(company_id)
+            },
             { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
-        const watchCountRow = existingItem.rows[0] || {};
-        const watchCount = watchCountRow.WATCH_COUNT || watchCountRow.watch_count || 0;
-        if (watchCount === 0) {
+        if (check.rows.length === 0) {
             return res.status(404).json({
                 success: false,
                 message: 'Stock not found in watchlist'
@@ -154,13 +140,16 @@ router.delete('/remove', async (req, res) => {
             `DELETE FROM watchlist
              WHERE user_id = :user_id
              AND company_id = :company_id`,
-            { user_id, company_id },
+            {
+                user_id: Number(user_id),
+                company_id: Number(company_id)
+            },
             { autoCommit: true }
         );
 
         res.json({
             success: true,
-            message: 'Stock removed from watchlist successfully'
+            message: 'Removed from watchlist!'
         });
     } catch (error) {
         res.status(500).json({

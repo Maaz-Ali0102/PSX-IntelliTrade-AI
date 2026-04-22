@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const API = axios.create({
     baseURL: 'http://localhost:5000/api'
@@ -15,7 +15,12 @@ function Admin() {
     const [messageType, setMessageType] = useState('success');
 
     const navigate = useNavigate();
+    const location = useLocation();
     const role = localStorage.getItem('role');
+
+    const getNavBtnStyle = (path) => location.pathname === path
+        ? { ...styles.navBtn, background: 'rgba(0,212,255,0.2)', border: '1px solid #00d4ff', color: '#00d4ff' }
+        : styles.navBtn;
 
     useEffect(() => {
         if (role !== 'ADMIN') {
@@ -106,10 +111,15 @@ function Admin() {
             <nav style={styles.navbar}>
                 <h1 style={styles.logo}>PSX IntelliTrade AI</h1>
                 <div style={styles.navLinks}>
-                    <button onClick={() => navigate('/dashboard')} style={styles.navBtn}>Dashboard</button>
-                    <button onClick={() => navigate('/stocks')} style={styles.navBtn}>Stocks</button>
-                    <button onClick={() => navigate('/portfolio')} style={styles.navBtn}>Portfolio</button>
-                    <button onClick={() => navigate('/analytics')} style={styles.navBtn}>Analytics</button>
+                    <button onClick={() => navigate('/dashboard')} style={getNavBtnStyle('/dashboard')}>Dashboard</button>
+                    <button onClick={() => navigate('/stocks')} style={getNavBtnStyle('/stocks')}>Stocks</button>
+                    <button onClick={() => navigate('/portfolio')} style={getNavBtnStyle('/portfolio')}>Portfolio</button>
+                    <button onClick={() => navigate('/watchlist')} style={getNavBtnStyle('/watchlist')}>Watchlist</button>
+                    <button onClick={() => navigate('/transactions')} style={getNavBtnStyle('/transactions')}>Transactions</button>
+                    <button onClick={() => navigate('/alerts')} style={getNavBtnStyle('/alerts')}>Alerts</button>
+                    <button onClick={() => navigate('/indices')} style={getNavBtnStyle('/indices')}>Indices</button>
+                    <button onClick={() => navigate('/news')} style={getNavBtnStyle('/news')}>News</button>
+                    <button onClick={() => navigate('/analytics')} style={getNavBtnStyle('/analytics')}>Analytics</button>
                     <button onClick={() => navigate('/admin')} style={{ ...styles.navBtn, background: 'rgba(255,215,0,0.2)', borderColor: '#ffd700', color: '#ffd700' }}>
                         Admin Panel
                     </button>
@@ -228,7 +238,7 @@ const styles = {
     loading: { minHeight: '100vh', background: '#0a0a1a', display: 'flex', alignItems: 'center', justifyContent: 'center' },
     navbar: { background: 'rgba(255,255,255,0.05)', padding: '15px 30px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)' },
     logo: { color: '#00d4ff', margin: 0, fontSize: '20px' },
-    navLinks: { display: 'flex', gap: '10px' },
+    navLinks: { display: 'flex', gap: '10px', flexWrap: 'wrap' },
     navBtn: { background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' },
     logoutBtn: { background: '#ff6b6b', border: 'none', color: 'white', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer' },
     content: { padding: '30px' },
