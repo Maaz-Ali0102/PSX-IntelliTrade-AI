@@ -1,439 +1,416 @@
-<div align="center">
+# 🚀 PSX IntelliTrade AI
 
-# PSX IntelliTrade AI
+![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white)
+![NodeJS](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)
 
-### Intelligent Stock Portfolio & Market Analytics System for Pakistan Stock Exchange
+**Intelligent Stock Portfolio & Market Analytics System for Pakistan Stock Exchange**
 
-[![Oracle](https://img.shields.io/badge/Oracle-21c_XE-F80000?logo=oracle&logoColor=white)](https://www.oracle.com/database/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-339933?logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-
-</div>
+PSX IntelliTrade AI is a full-stack, database-driven trading analytics platform that combines Oracle PL/SQL power with a modern React interface and a scalable Node.js API layer. It is designed to model realistic portfolio workflows, market intelligence, governance controls, and financial analytics for PSX-focused decision support.
 
 ---
 
-## Table of Contents
-- [1. Overview](#1-overview)
-- [2. Live Demo](#2-live-demo)
-- [3. Features](#3-features)
-- [4. Tech Stack](#4-tech-stack)
-- [5. System Architecture](#5-system-architecture)
-- [6. Database Design](#6-database-design)
-- [7. PL/SQL Components](#7-plsql-components)
-- [8. Analytics and Formulas](#8-analytics-and-formulas)
-- [9. API Endpoints](#9-api-endpoints)
-- [10. Installation and Setup](#10-installation-and-setup)
-- [11. Default Credentials](#11-default-credentials)
-- [12. Project Structure](#12-project-structure)
-- [13. Key Concepts Demonstrated](#13-key-concepts-demonstrated)
-- [14. Contributing](#14-contributing)
-- [15. License](#15-license)
+## 1. HEADER
+
+**Project:** PSX IntelliTrade AI  
+**Tagline:** Intelligent Stock Portfolio & Market Analytics System for Pakistan Stock Exchange  
+**Repository:** https://github.com/Maaz-Ali0102/PSX-IntelliTrade-AI
+
+This repository demonstrates an enterprise-style architecture where business rules are enforced across backend services and Oracle database logic. The result is a practical portfolio management and market intelligence system with authentication, analytics, alerts, watchlists, indices, and admin operations.
 
 ---
 
-## 1. Overview
-PSX IntelliTrade AI is a full-stack trading intelligence platform designed around Pakistan Stock Exchange workflows. It combines a modern React frontend, a Node.js and Express backend, and an Oracle 21c XE database with PL/SQL-driven business logic.
+## 2. TABLE OF CONTENTS
 
-This project was built to demonstrate how advanced database capabilities can power real-world fintech features while still providing a clean, responsive, role-based web experience.
+- [1. HEADER](#1-header)
+- [2. TABLE OF CONTENTS](#2-table-of-contents)
+- [3. OVERVIEW](#3-overview)
+- [4. FEATURES](#4-features)
+- [5. SYSTEM ARCHITECTURE](#5-system-architecture)
+- [6. DATABASE DESIGN](#6-database-design)
+- [7. PL/SQL COMPONENTS](#7-plsql-components)
+- [8. ANALYTICS & FORMULAS](#8-analytics--formulas)
+- [9. API ENDPOINTS](#9-api-endpoints)
+- [10. BUSINESS RULES](#10-business-rules)
+- [11. DATABASE SETUP](#11-database-setup)
+- [12. BACKEND SETUP](#12-backend-setup)
+- [13. FRONTEND SETUP](#13-frontend-setup)
+- [14. DEFAULT CREDENTIALS](#14-default-credentials)
+- [15. PROJECT STRUCTURE](#15-project-structure)
+- [16. DATABASE UPDATES (Phase 1 & 2)](#16-database-updates-phase-1--2)
+- [17. CHALLENGES FACED](#17-challenges-faced)
+- [18. KNOWN LIMITATIONS](#18-known-limitations)
+- [19. FUTURE IMPROVEMENTS](#19-future-improvements)
+- [20. WHY ORACLE](#20-why-oracle)
+- [21. KEY CONCEPTS DEMONSTRATED](#21-key-concepts-demonstrated)
+- [22. CONTRIBUTING](#22-contributing)
+- [23. LICENSE](#23-license)
+
+---
+
+## 3. OVERVIEW
+
+### What is PSX IntelliTrade AI?
+PSX IntelliTrade AI is a role-based investment intelligence platform for Pakistan Stock Exchange data simulation, portfolio execution, and market analytics. It brings together stock discovery, trade execution, risk measurement, and alerting into one integrated workflow.
 
 ### Why it was built
-- To bridge the gap between raw market data and actionable investment insights.
-- To demonstrate production-style Oracle SQL and PL/SQL usage in a portfolio-grade project.
-- To provide an end-to-end reference system for authentication, portfolio management, analytics, and administration.
-
-### Problems it solves
-- Fragmented stock analysis and portfolio tracking.
-- Lack of integrated risk scoring, gainers/losers, and sector-level intelligence.
-- Manual holdings reconciliation and weak validation in trade flows.
-- Missing operational admin controls for user lifecycle and alert management.
+- To create a practical Oracle-backed fintech system that goes beyond CRUD and demonstrates serious SQL/PL/SQL capability.
+- To centralize portfolio and market analytics in a single system with business-rule integrity.
+- To simulate institutional-grade workflows for academic and professional demonstration use.
 
 ### Who can use it
-- Investors: to manage portfolios, buy/sell stocks, monitor P and L, and track alerts.
-- Admins: to monitor system health, manage users and roles, and generate market alerts.
+- **ADMIN**
+  - Oversees platform activity, users, alerts, and transaction monitoring.
+  - Triggers system-wide market alert generation.
+- **INVESTOR**
+  - Manages portfolios, executes buy/sell operations, tracks risk and performance.
+  - Uses watchlist, alerts, market indices, and news intelligence.
+
+### What problems it solves
+- Fragmented market tracking across multiple disconnected tools.
+- Inconsistent portfolio calculations and weak transaction validations.
+- Lack of explainable risk scoring and cross-sector market visibility.
+- Manual operational work for alerts and user access governance.
+
+### Challenges faced (and how they were solved)
+The biggest complexity was not UI; it was maintaining **financial correctness across time-based price data, transactional integrity, and analytics views**. We solved this through carefully designed constraints, trigger logic, and Oracle analytics functions.
+
+| Area | Challenge | Resolution |
+|---|---|---|
+| Trade Integrity | Keeping holdings accurate after mixed BUY/SELL patterns | Implemented `TRG_UPDATE_HOLDINGS` to auto-reconcile quantity, invested value, and average cost |
+| Alert Duplication | Re-running daily alerts created repeated records | Added idempotent checks in `GENERATE_ALERTS` to enforce once-per-day generation |
+| Analytics Accuracy | P&L% division errors when investment baseline was zero | Added guarded CASE logic in analytics view to avoid divide-by-zero |
+| Performance on Joins | Complex joins across historical prices and portfolios became heavy | Used targeted query design, latest-price extraction logic, and indexed foreign-key access patterns |
+| Many-to-Many Modeling | Multiple relationships (watchlist, index composition, news impact) required extensibility | Normalized schema with dedicated junction tables and uniqueness constraints |
+| Role-Driven Access | Preventing inactive users and role misuse | Enforced checks in login function plus backend route-level role controls |
+| Data Simulation Quality | Needed realistic seed data volume for analytics testing | Generated one-year multi-company price history with Oracle randomization and strict table relations |
 
 ---
 
-## 2. Live Demo
-Local development URLs:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+## 4. FEATURES
 
-To publish a live demo, deploy the frontend on Vercel/Netlify and backend on Render/Azure/AWS with Oracle connectivity.
+### 🔐 Authentication & Security
+- User registration with password hashing (RAWTOHEX)
+- Secure login via Oracle PL/SQL function (PSX_LOGIN)
+- Role-based access control (ADMIN/INVESTOR)
+- Protected routes
+- Account activation/deactivation by admin
 
----
+### 📈 Stock Market
+- 20 PSX listed companies across 6 sectors
+- 21,900 rows simulated 365-day price history
+- Real-time stock price display
+- Stock search and sector filtering
+- Individual stock detail with 7D/30D/90D/365D charts
+- Stock comparison (up to 3 stocks)
+- Add stocks to personal watchlist with notes
 
-## 3. Features
+### 💼 Portfolio Management
+- Multiple portfolios per user
+- Buy/Sell with validation:
+  - Cannot sell more than owned
+  - Price cannot be zero
+  - Quantity cannot be zero
+- Auto holdings update via Oracle Trigger
+- Duplicate portfolio name prevention
+- Portfolio summary (Total Value, P&L, Risk Score)
+- Portfolio growth chart (30 days)
 
-### Authentication and Security
-- User registration with password hashing (RAWTOHEX).
-- Secure login via Oracle PL/SQL function.
-- Role-based access control (ADMIN and INVESTOR).
-- Protected routes in frontend.
-- Account activation and deactivation.
+### 📊 Analytics & Intelligence
+- Volatility-based risk scoring (STDDEV)
+- Top gainers/losers ranking (RANK function)
+- Sector performance analysis
+- Price spike/drop alerts (>5% change)
+- Market summary dashboard
 
-### Stock Market
-- 20 PSX listed companies across 6 sectors.
-- 21,900 rows of simulated 365-day price history.
-- Real-time stock price display.
-- Stock search and sector filtering.
-- Individual stock detail with 7D, 30D, 90D, 365D charts.
-- Stock comparison for up to 3 stocks.
+### 👀 Watchlist
+- Add stocks to personal watchlist
+- Add notes to watched stocks
+- Remove stocks from watchlist
+- View current price and change% for watched stocks
 
-### Portfolio Management
-- Multiple portfolios per user.
-- Buy and sell with validation:
-  - Cannot sell more than owned.
-  - Price cannot be zero.
-  - Quantity cannot be zero.
-- Auto holdings update via Oracle trigger.
-- Duplicate portfolio name prevention.
-- Portfolio summary cards (Total Value, P and L, Risk).
-- Portfolio growth chart for last 30 days.
+### 📰 Market News
+- 10 PSX market news articles
+- Filter by category (Market/Sector/Economy/Regulatory)
+- News linked to affected companies
+- Impact tracking (POSITIVE/NEUTRAL/NEGATIVE)
 
-### Analytics and Intelligence
-- Volatility-based risk scoring using STDDEV.
-- Top gainers and losers ranking using RANK.
-- Sector performance analysis.
-- Price spike and drop alerts for changes above 5 percent.
-- Market summary dashboard.
+### 📉 Market Indices
+- KSE-5 (Top 5 companies)
+- KSE-10 (Top 10 companies)
+- KSE All Share (All 20 companies)
+- Weightage percentage per company
+- Live price and change% per index component
 
-### Admin Panel
-- System statistics.
-- User management (activate and deactivate).
-- Role management.
-- Generate market alerts.
-- All transactions overview.
+### 🔔 Alerts System
+- Dedicated alerts page
+- Filter by PRICE SPIKE/PRICE DROP
+- Mark alerts as read
+- Unread count badge
 
-### Transaction History
-- Complete buy and sell history per user.
-- Filter by BUY and SELL.
-- Total transaction count.
+### 👑 Admin Panel
+- System statistics (Users, Portfolios, Transactions, Alerts)
+- User management (activate/deactivate)
+- Role management (make admin)
+- Generate market alerts (Oracle procedure)
+- View all transactions
 
-### Alerts System
-- Dedicated alerts page.
-- Filter by PRICE SPIKE and PRICE DROP.
-- Mark alerts as read.
-- Unread count badge.
-
----
-
-## 4. Tech Stack
-
-### Frontend
-- React 18
-- React Router DOM
-- Recharts
-- Axios
-
-### Backend
-- Node.js
-- Express.js
-
-### Database
-- Oracle Database 21c XE
-
-### Tools
-- Oracle SQL Developer
-- Visual Studio Code
+### 📋 Transaction History
+- Complete buy/sell history per user
+- Filter by BUY/SELL
+- Total transaction count
 
 ---
 
-## 5. System Architecture
-PSX IntelliTrade AI follows a 3-tier architecture:
+## 5. SYSTEM ARCHITECTURE
+
+PSX IntelliTrade AI follows a three-tier architecture with clear separation of concerns.
 
 ```text
-React Frontend (Port 3000)
-        <-> HTTP / REST APIs <->
-Node.js + Express Backend (Port 5000)
-        <-> OracleDB Driver <->
-Oracle Database 21c XE (Port 1521)
+React 18 Frontend (Port 3000)
+        |
+        | HTTP / JSON (Axios)
+        v
+Node.js + Express API (Port 5000)
+        |
+        | Oracle DB Driver
+        v
+Oracle Database 21c XE (localhost:1521/XEPDB1)
 ```
 
-### Architecture Notes
-- Frontend handles role-based UI, charts, table filters, and route protection.
-- Backend enforces trade validation, API orchestration, and database communication.
-- Oracle layer handles transactional consistency and analytics through views, procedures, functions, and triggers.
+### Layer Responsibilities
+
+| Layer | Responsibilities |
+|---|---|
+| Frontend | Authentication flow, protected routing, dashboards, analytics visualization, and user interactions |
+| Backend | API orchestration, validation, business rule checks, role-aware operations, and DB integration |
+| Database | Persistence, constraints, PL/SQL procedures/functions, triggers, analytic views, and transactional consistency |
 
 ---
 
-## 6. Database Design
+## 6. DATABASE DESIGN
 
-### Tables (12)
-![PSX IntelliTrade AI - Database ERD](database/ERD.png)
+![Database ERD](database/ERD.png)
 
-1. COMPANIES - PSX listed companies  
-   Columns: company_id, symbol, company_name, sector, listed_date, is_active
+### Tables
 
-2. STOCK_PRICES - Daily price history  
-   Columns: price_id, company_id, price_date, open_price, high_price, low_price, close_price, volume
+| # | Table | Description | Key Columns |
+|---|-------|-------------|-------------|
+| 1 | COMPANIES | PSX listed companies | company_id PK, symbol UK, sector |
+| 2 | STOCK_PRICES | Daily price history | price_id PK, company_id FK, open/high/low/close |
+| 3 | USERS | System users | user_id PK, username UK, role, is_active |
+| 4 | PORTFOLIOS | User portfolios | portfolio_id PK, user_id FK, portfolio_name |
+| 5 | HOLDINGS | Current holdings | holding_id PK, portfolio_id FK, quantity |
+| 6 | TRANSACTIONS | Buy/Sell history | transaction_id PK, trans_type, quantity, price |
+| 7 | ALERTS | Market alerts | alert_id PK, alert_type, is_read |
+| 8 | WATCHLIST | User watchlists | watchlist_id PK, user_id FK, company_id FK |
+| 9 | MARKET_INDICES | PSX indices | index_id PK, index_name, base_value |
+| 10 | INDEX_COMPONENTS | Index compositions | component_id PK, weightage |
+| 11 | NEWS | Market news | news_id PK, title, source, category |
+| 12 | COMPANY_NEWS | News-Company links | cn_id PK, impact |
 
-3. USERS - System users  
-   Columns: user_id, username, email, password_hash, role, created_at, is_active
+### Views
 
-4. PORTFOLIOS - User portfolios  
-   Columns: portfolio_id, user_id, portfolio_name, created_at, total_invested
-
-5. HOLDINGS - Current stock holdings  
-   Columns: holding_id, portfolio_id, company_id, quantity, avg_buy_price, total_invested
-
-6. TRANSACTIONS - Buy and sell history  
-   Columns: transaction_id, portfolio_id, company_id, trans_type, quantity, price, total_amount, trans_date
-
-7. ALERTS - Market alerts  
-   Columns: alert_id, company_id, alert_type, message, created_at, is_read
-
-8. WATCHLIST - User stock watchlist  
-   Columns: watchlist_id, user_id FK, company_id FK, added_date, notes  
-   Purpose: Many-to-Many between USERS and COMPANIES
-
-9. MARKET_INDICES - PSX market indices  
-   Columns: index_id, index_name, description, base_value, launch_date  
-   Data: KSE-5, KSE-10, KSE All Share
-
-10. INDEX_COMPONENTS - Market index compositions  
-   Columns: component_id, index_id FK, company_id FK, weightage, added_date  
-   Purpose: Many-to-Many between MARKET_INDICES and COMPANIES
-
-11. NEWS - Market news articles  
-   Columns: news_id, title, content, source, category, published_date  
-   Data: 10 news articles from Dawn, ARY, Geo etc
-
-12. COMPANY_NEWS - News to company relationships  
-   Columns: cn_id, news_id FK, company_id FK, impact, added_date  
-   Purpose: Many-to-Many between NEWS and COMPANIES
-
-### Views (3)
-1. PORTFOLIO_ANALYTICS
-- Calculates portfolio value, P and L, P and L percent.
-- Uses RANK to fetch latest stock price.
-
-2. STOCK_RISK
-- Calculates volatility using STDDEV.
-- Assigns HIGH RISK, MEDIUM RISK, LOW RISK levels.
-
-3. TOP_GAINERS_LOSERS
-- Compares today versus yesterday prices.
-- Uses RANK for gainers and losers.
-- Calculates percentage change.
-
-All 3 views (`portfolio_analytics`, `stock_risk`, `top_gainers_losers`) are used by new routes as well.
+| View | Purpose | Functions Used |
+|------|---------|----------------|
+| PORTFOLIO_ANALYTICS | P&L calculations | RANK(), arithmetic |
+| STOCK_RISK | Volatility scoring | STDDEV(), AVG() |
+| TOP_GAINERS_LOSERS | Daily rankings | RANK(), LAG() |
 
 ### Many-to-Many Relationships
-1. USERS ↔ COMPANIES through WATCHLIST
-- One user can watch many companies.
-- One company can be watched by many users.
-- Extra attributes: added_date, notes.
 
-2. MARKET_INDICES ↔ COMPANIES through INDEX_COMPONENTS
-- One index contains many companies.
-- One company can be in many indices.
-- Extra attributes: weightage, added_date.
-
-3. NEWS ↔ COMPANIES through COMPANY_NEWS
-- One news article can affect many companies.
-- One company can have many news articles.
-- Extra attributes: impact, added_date.
-
-### Database Updates
-1. portfolio_analytics VIEW updated:
-- Added CASE WHEN to prevent division by zero.
-- When total_invested = 0, P and L percent = 0.
-
-2. generate_alerts PROCEDURE updated:
-- Added duplicate prevention.
-- Checks whether today's alerts already exist.
-- If yes, skips generation.
-- Prevents duplicate same-day alerts.
-
-3. TRG_UPDATE_HOLDINGS TRIGGER:
-- After SELL, if quantity becomes 0.
-- Backend DELETE removes holding.
-- Keeps holdings table clean.
-
-4. Trade Validation (Backend):
-- Cannot sell more shares than owned.
-- Price cannot be 0.
-- Quantity cannot be 0.
-- Returns proper error messages.
-
-5. New Tables Added (Phase 2):
-- WATCHLIST: User stock watchlist with notes.
-- MARKET_INDICES: KSE-5, KSE-10, KSE All Share.
-- INDEX_COMPONENTS: Company weightages in indices.
-- NEWS: 10 market news articles.
-- COMPANY_NEWS: News-to-company mapping with impact tracking.
+| # | Relationship | Junction Table | Extra Attributes |
+|---|-------------|----------------|-----------------|
+| 1 | USERS ↔ COMPANIES | WATCHLIST | added_date, notes |
+| 2 | MARKET_INDICES ↔ COMPANIES | INDEX_COMPONENTS | weightage |
+| 3 | NEWS ↔ COMPANIES | COMPANY_NEWS | impact |
 
 ---
 
-## 7. PL/SQL Components
+## 7. PL/SQL COMPONENTS
 
-### Stored Procedures (2)
-1. REGISTER_USER(username, email, password, role)
-- Hashes password using RAWTOHEX(UTL_RAW.CAST_TO_RAW()).
-- Inserts user in USERS table.
-- Handles duplicate username and email exceptions.
+### Stored Procedures
 
-2. GENERATE_ALERTS()
-- Checks if alerts are already generated today.
-- Reads TOP_GAINERS_LOSERS view.
-- Inserts PRICE SPIKE alerts where change greater than +5 percent.
-- Inserts PRICE DROP alerts where change less than -5 percent.
-- Prevents duplicate daily alerts.
+| Procedure | Parameters | Description |
+|-----------|-----------|-------------|
+| REGISTER_USER | username, email, password, role | Hashes password, inserts user |
+| GENERATE_ALERTS | none | Checks daily alerts, inserts spike/drop |
 
-### Function (1)
-1. PSX_LOGIN(username, password) RETURN VARCHAR2
-- Verifies hashed password.
-- Returns SUCCESS:ROLE or ERROR:message.
-- Checks user is active with is_active = 1.
+### Functions
 
-### Trigger (1)
-1. TRG_UPDATE_HOLDINGS (AFTER INSERT ON TRANSACTIONS)
-- BUY path:
-  - Creates new holding or updates existing.
-  - Recalculates average buy price.
-  - Updates total invested.
-- SELL path:
-  - Reduces quantity.
-  - Updates total invested proportionally.
+| Function | Returns | Description |
+|----------|---------|-------------|
+| PSX_LOGIN | VARCHAR2 | Verifies password, returns SUCCESS:ROLE |
 
-### Sequences (7)
-- seq_company_id
-- seq_price_id
-- seq_user_id
-- seq_portfolio_id
-- seq_holding_id
-- seq_transaction_id
-- seq_alert_id
+### Triggers
+
+| Trigger | Event | Description |
+|---------|-------|-------------|
+| TRG_UPDATE_HOLDINGS | AFTER INSERT ON TRANSACTIONS | Auto updates holdings on buy/sell |
+
+### Sequences (12 total)
+
+```text
+seq_company_id, seq_price_id, seq_user_id,
+seq_portfolio_id, seq_holding_id, seq_transaction_id,
+seq_alert_id, seq_watchlist_id, seq_market_index_id,
+seq_component_id, seq_news_id, seq_company_news_id
+```
 
 ---
 
-## 8. Analytics and Formulas
+## 8. ANALYTICS & FORMULAS
 
-### Risk Score
-- Risk = STDDEV(close_price) over 365 days
-- HIGH RISK when STDDEV > 15
-- MEDIUM RISK when STDDEV > 8
-- LOW RISK when STDDEV <= 8
+| Formula | Calculation | Used In |
+|---------|-------------|---------|
+| Risk Score | STDDEV(close_price) over 365 days | stock_risk view |
+| Portfolio Value | quantity × current_price | portfolio_analytics |
+| Profit/Loss | current_value - total_invested | portfolio_analytics |
+| P&L % | (P&L / total_invested) × 100 | portfolio_analytics |
+| Avg Buy Price | total_invested / quantity | trigger |
+| Price Change % | (today - yesterday) / yesterday × 100 | top_gainers_losers |
+| Alert Trigger | change% > +5% or < -5% | generate_alerts |
 
-### Portfolio Value
-- Current Value = Quantity * Current Price
+### Risk Levels
 
-### Profit and Loss
-- P and L = Current Value - Total Invested
-- P and L percent = (P and L / Total Invested) * 100
-
-### Average Buy Price
-- Avg Price = Total Invested / Total Quantity
-
-### Price Change
-- Change percent = (Today Price - Yesterday Price) / Yesterday Price * 100
-
-### Alert Trigger
-- PRICE SPIKE when Change percent > +5 percent
-- PRICE DROP when Change percent < -5 percent
+| Level | Condition |
+|-------|-----------|
+| HIGH RISK | STDDEV > 15 |
+| MEDIUM RISK | STDDEV > 8 |
+| LOW RISK | STDDEV ≤ 8 |
 
 ---
 
-## 9. API Endpoints
+## 9. API ENDPOINTS
 
-### Auth
+> Total: **40+ REST API endpoints** across all modules (including list/detail/filter/action routes).
+
+### Auth Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | /api/auth/register | Register new user |
-| POST | /api/auth/login | Login user |
-| GET | /api/auth/user/:username | Get user details |
+| POST | /api/auth/login | Authenticate and return role/session details |
+| GET | /api/auth/user/:username | Get user profile summary |
 
-### Stocks
+### Stock Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | /api/stocks | Get all stocks with current price |
+| GET | /api/stocks | List stocks with latest price context |
 | GET | /api/stocks/:symbol/detail | Get stock detail |
-| GET | /api/stocks/:symbol/history | Get price history |
-| GET | /api/stocks/gainers | Top 5 gainers |
-| GET | /api/stocks/losers | Top 5 losers |
-| GET | /api/stocks/risk | All risk scores |
+| GET | /api/stocks/:symbol/history | Get historical prices |
+| GET | /api/stocks/gainers | Top gainers |
+| GET | /api/stocks/losers | Top losers |
+| GET | /api/stocks/risk | Risk-ranked stock list |
 
-### Portfolio
+### Portfolio Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | /api/portfolio/create | Create portfolio |
-| GET | /api/portfolio/:user_id | Get user portfolios |
+| GET | /api/portfolio/:user_id | List user portfolios |
 | GET | /api/portfolio/:portfolio_id/holdings | Get holdings |
 | GET | /api/portfolio/:portfolio_id/summary | Portfolio summary |
-| GET | /api/portfolio/:portfolio_id/risk | Portfolio risk |
-| GET | /api/portfolio/:portfolio_id/growth | Growth chart data |
-| GET | /api/portfolio/:user_id/transactions | Transaction history |
-| POST | /api/portfolio/buy | Buy stock (with validation) |
-| POST | /api/portfolio/sell | Sell stock (with validation) |
+| GET | /api/portfolio/:portfolio_id/risk | Portfolio risk profile |
+| GET | /api/portfolio/:portfolio_id/growth | 30-day growth data |
+| GET | /api/portfolio/:user_id/transactions | User transaction history |
+| POST | /api/portfolio/buy | Execute buy order |
+| POST | /api/portfolio/sell | Execute sell order |
 
-### Analytics
+### Analytics Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | /api/analytics/market | Market summary |
 | GET | /api/analytics/sectors | Sector performance |
-| GET | /api/analytics/alerts | All alerts |
-| PUT | /api/analytics/alerts/:id/read | Mark alert read |
-| GET | /api/analytics/risk/:portfolio_id | Portfolio risk |
+| GET | /api/analytics/alerts | List alerts |
+| PUT | /api/analytics/alerts/:id/read | Mark alert as read |
+| GET | /api/analytics/risk/:portfolio_id | Portfolio risk analytics |
 
-### Admin
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | /api/admin/stats | System statistics |
-| GET | /api/admin/users | All users |
-| GET | /api/admin/transactions | All transactions |
-| POST | /api/admin/generate-alerts | Generate alerts |
-| PUT | /api/admin/users/:id/role | Change user role |
-| PUT | /api/admin/users/:id/deactivate | Deactivate user |
-| PUT | /api/admin/users/:id/activate | Activate user |
+### Watchlist Endpoints
 
-### Watchlist
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | /api/watchlist/:user_id | Get user watchlist |
 | POST | /api/watchlist/add | Add stock to watchlist |
-| DELETE | /api/watchlist/remove | Remove from watchlist |
+| DELETE | /api/watchlist/remove | Remove stock from watchlist |
 
-### Market Indices
+### Market Indices Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
-| GET | /api/indices | Get all indices |
-| GET | /api/indices/:index_id/stocks | Get index stocks |
+| GET | /api/indices | List all indices |
+| GET | /api/indices/:index_id/stocks | Get index components and metrics |
 
-### News
+### News Endpoints
+
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | /api/news | Get all news |
-| GET | /api/news/latest | Latest 5 news |
-| GET | /api/news/:news_id | Single news + companies |
-| GET | /api/news/company/:company_id | Company news |
+| GET | /api/news/latest | Get latest news |
+| GET | /api/news/:news_id | Get single news item with linked companies |
+| GET | /api/news/company/:company_id | Get company-specific news |
+
+### Admin Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | /api/admin/stats | System KPIs |
+| GET | /api/admin/users | List all users |
+| GET | /api/admin/transactions | List all transactions |
+| POST | /api/admin/generate-alerts | Run daily alert generation |
+| PUT | /api/admin/users/:id/role | Update role |
+| PUT | /api/admin/users/:id/deactivate | Deactivate account |
+| PUT | /api/admin/users/:id/activate | Activate account |
 
 ---
 
-## 10. Installation and Setup
+## 10. BUSINESS RULES
 
-### Prerequisites
-- Oracle Database 21c XE
-- Node.js v18+
-- Oracle SQL Developer
+| # | Rule | Enforcement |
+|---|------|-------------|
+| 1 | Role must be ADMIN or INVESTOR | DB DEFAULT + Backend |
+| 2 | Cannot sell more shares than owned | Backend validation |
+| 3 | Price cannot be zero | Backend validation |
+| 4 | Quantity cannot be zero | Backend validation |
+| 5 | Duplicate portfolio name per user | UNIQUE constraint |
+| 6 | User must be active to login | PSX_LOGIN function |
+| 7 | One watchlist entry per stock | UNIQUE constraint |
+| 8 | Daily alerts generated once | GENERATE_ALERTS check |
+| 9 | Index component unique per index | UNIQUE constraint |
+| 10 | News company link unique | UNIQUE constraint |
 
-### Step 1 - Oracle Setup
+---
+
+## 11. DATABASE SETUP
+
+### Step 1: Install and Start Oracle 21c XE
+- Ensure Oracle listener and database services are running.
+- Use service: `XEPDB1`.
+
+### Step 2: Create Project User
+
 ```sql
 ALTER SESSION SET CONTAINER = XEPDB1;
+
 CREATE USER psx_user IDENTIFIED BY psx123;
-GRANT ALL PRIVILEGES TO psx_user;
+GRANT CONNECT, RESOURCE TO psx_user;
+GRANT CREATE VIEW, CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO psx_user;
+GRANT UNLIMITED TABLESPACE TO psx_user;
 ```
 
-### Step 2 - SQL Developer Connection
-- Connection Name: PSX_Project
-- Username: psx_user
-- Password: psx123
-- Hostname: localhost
-- Port: 1521
-- Service Name: XEPDB1
+### Step 3: Connect in Oracle SQL Developer
+- Host: `localhost`
+- Port: `1521`
+- Service Name: `XEPDB1`
+- Username: `psx_user`
+- Password: `psx123`
 
-### Step 3 - Run SQL files in order
+### Step 4: Execute SQL Scripts in Order
+
 ```text
 database/01_tables.sql
 database/02_sequences.sql
@@ -442,15 +419,38 @@ database/04_auth_procedures.sql
 database/05_triggers.sql
 database/06_analytics.sql
 database/07_alerts.sql
+database/08_watchlist.sql
+database/09_market_indices.sql
+database/10_news.sql
+database/11_seed_new_data.sql
 ```
 
-### Step 4 - Backend
+### Step 5: Verify Objects
+
+```sql
+SELECT COUNT(*) FROM companies;
+SELECT COUNT(*) FROM stock_prices;
+SELECT COUNT(*) FROM users;
+SELECT object_name, object_type
+FROM user_objects
+WHERE object_type IN ('TABLE', 'VIEW', 'PROCEDURE', 'FUNCTION', 'TRIGGER')
+ORDER BY object_type, object_name;
+```
+
+---
+
+## 12. BACKEND SETUP
+
+### Step 1: Install Dependencies
+
 ```bash
 cd backend
 npm install
 ```
 
-Create `.env` in backend folder:
+### Step 2: Configure Environment
+Create `.env` in `backend`:
+
 ```env
 DB_USER=psx_user
 DB_PASSWORD=psx123
@@ -460,31 +460,57 @@ DB_SERVICE=XEPDB1
 PORT=5000
 ```
 
-Run backend:
+### Step 3: Run Backend Server
+
 ```bash
 node server.js
 ```
 
-### Step 5 - Frontend
+### Step 4: Health Check
+
 ```bash
-cd frontend
-npm install
-npm start
+curl http://localhost:5000/api/stocks
 ```
 
 ---
 
-## 11. Default Credentials
+## 13. FRONTEND SETUP
+
+### Step 1: Install Dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+### Step 2: Run React App
+
+```bash
+npm start
+```
+
+### Step 3: Access Application
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5000`
+
+### Step 4: Verify Role-Based Access
+- Login as Admin and verify admin routes.
+- Login as Investor and verify portfolio/watchlist features.
+
+---
+
+## 14. DEFAULT CREDENTIALS
 
 | Username | Password | Role |
-|---|---|---|
+|----------|----------|------|
 | admin | admin123 | ADMIN |
 | ali_investor | ali123 | INVESTOR |
 | sara_investor | sara123 | INVESTOR |
 
 ---
 
-## 12. Project Structure
+## 15. PROJECT STRUCTURE
+
 ```text
 PSX IntelliTrade AI/
 ├── README.md
@@ -516,6 +542,14 @@ PSX IntelliTrade AI/
 └── frontend/
     ├── package.json
     ├── README.md
+    ├── build/
+    │   ├── asset-manifest.json
+    │   ├── index.html
+    │   ├── manifest.json
+    │   ├── robots.txt
+    │   └── static/
+    │       ├── css/
+    │       └── js/
     ├── public/
     │   ├── index.html
     │   ├── manifest.json
@@ -535,39 +569,114 @@ PSX IntelliTrade AI/
         │   ├── Analytics.js
         │   ├── Dashboard.js
         │   ├── Login.js
+        │   ├── MarketIndices.js
+        │   ├── News.js
         │   ├── Portfolio.js
         │   ├── Register.js
         │   ├── Stocks.js
-        │   └── Transactions.js
+        │   ├── Transactions.js
+        │   └── Watchlist.js
         └── services/
             └── api.js
 ```
 
 ---
 
-## 13. Key Concepts Demonstrated
-- Advanced Oracle SQL and PL/SQL
-- Triggers for automation
-- Views for complex calculations
-- Stored procedures for business logic
-- Analytic functions (RANK, STDDEV, AVG, LAG)
-- RESTful API design
-- React component architecture
-- JWT-less session management
-- Role-based access control
+## 16. DATABASE UPDATES (Phase 1 & 2)
+
+| Phase | Update | Impact |
+|---|---|---|
+| Phase 1 | Core schema created (companies, prices, users, portfolios, holdings, transactions, alerts) | Established transactional and analytics baseline |
+| Phase 1 | `PSX_LOGIN` and `REGISTER_USER` logic added | Centralized authentication at database layer |
+| Phase 1 | `TRG_UPDATE_HOLDINGS` trigger implemented | Automated holdings consistency after each trade |
+| Phase 1 | Analytics views (`portfolio_analytics`, `stock_risk`, `top_gainers_losers`) added | Enabled KPI dashboards and risk scoring |
+| Phase 1 | `GENERATE_ALERTS` procedure introduced | Automated market movement alert generation |
+| Phase 2 | Watchlist module (`WATCHLIST`) added | Personalized investor tracking with notes |
+| Phase 2 | Index module (`MARKET_INDICES`, `INDEX_COMPONENTS`) added | Broader market benchmarking and component analytics |
+| Phase 2 | News module (`NEWS`, `COMPANY_NEWS`) added | Integrated qualitative market intelligence |
+| Phase 2 | Guard clauses for P&L division and duplicate alerts refined | Improved correctness and operational stability |
 
 ---
 
-## 14. Contributing
-Contributions are welcome.
+## 17. CHALLENGES FACED
+
+| # | Challenge | Why it was difficult | Solution implemented |
+|---|---|---|---|
+| 1 | Maintaining holdings correctness over sequential buy/sell events | Weighted averages and investment basis change with each transaction | Trigger-based recalculation with deterministic buy/sell branches |
+| 2 | Ensuring analytics stayed accurate on sparse or edge-case data | Zero-investment and missing-day scenarios can break percentages/rankings | CASE-based safeguards and strict latest-price selection logic |
+| 3 | Preventing duplicate operational alerts | Admins may trigger alert generation multiple times per day | Idempotent procedure checks with same-day guard conditions |
+| 4 | Scaling join-heavy analytics against growing historical data | Portfolio, prices, and rankings require multi-table computations | Normalized schema + optimized query patterns + FK-based access |
+| 5 | Modeling multiple many-to-many business domains cleanly | Watchlists, index composition, and news impact all required metadata | Dedicated junction tables with uniqueness constraints |
+| 6 | Synchronizing DB business logic with backend validation | Rules must align to avoid contradictory outcomes | Mirrored enforcement: DB constraints + backend guardrails |
+| 7 | Role and account-state security in login flow | Inactive or unauthorized users needed strict handling | Login function role return pattern and active-status verification |
+| 8 | Building realistic seed data for meaningful analytics | Low-volume data cannot validate volatility and ranking math | Generated 365-day history for all companies to stress analytics paths |
+
+---
+
+## 18. KNOWN LIMITATIONS
+
+- Simulated market data is static and not connected to a live PSX feed.
+- LocalStorage-based session state is suitable for demo scope, not enterprise SSO.
+- No distributed job scheduler for timed daily alert generation.
+- Limited automated test coverage across all API edge cases.
+- No asynchronous queueing for high-throughput trade ingestion.
+- Deployment guidance is local-first; production hardening is not fully scripted.
+
+---
+
+## 19. FUTURE IMPROVEMENTS
+
+- Integrate live PSX market data ingestion pipeline.
+- Introduce JWT + refresh-token based secure auth model.
+- Add audit logs for sensitive admin actions.
+- Implement CI/CD pipeline with lint, test, and migration checks.
+- Add notification channels (email/SMS/push) for alerts.
+- Add predictive analytics module for trend modeling.
+- Add portfolio optimization suggestions based on risk appetite.
+- Add role-specific reporting exports (PDF/CSV).
+
+---
+
+## 20. WHY ORACLE
+
+Oracle was chosen because the project relies heavily on **data integrity, transactional consistency, and advanced analytics at the database layer**. Features such as PL/SQL procedures/functions, robust trigger support, analytic functions (`RANK`, `LAG`, `STDDEV`), and predictable enterprise-grade SQL behavior make Oracle a strong fit for a finance-oriented platform where correctness and governance are as important as UI experience.
+
+---
+
+## 21. KEY CONCEPTS DEMONSTRATED
+
+| Concept | Demonstrated In |
+|---|---|
+| Relational Data Modeling | Core tables, foreign keys, and normalized many-to-many design |
+| PL/SQL Business Logic | `REGISTER_USER`, `PSX_LOGIN`, `GENERATE_ALERTS` |
+| Trigger-Driven Consistency | `TRG_UPDATE_HOLDINGS` |
+| Advanced SQL Analytics | Risk scoring, gainers/losers, portfolio P&L views |
+| REST API Design | Modular route structure with role-aware operations |
+| Frontend Data Visualization | Recharts-based trend, risk, and portfolio dashboards |
+| Access Control | ADMIN/INVESTOR feature segmentation |
+| Full-Stack Integration | React + Express + Oracle end-to-end workflow |
+
+---
+
+## 22. CONTRIBUTING
+
+Contributions are welcome and appreciated.
 
 1. Fork the repository.
-2. Create a feature branch.
-3. Commit clear and focused changes.
-4. Add tests or validation notes where possible.
-5. Open a pull request with a concise description.
+2. Create a new branch: `feature/your-feature-name`.
+3. Keep commits focused and descriptive.
+4. Add validation notes or tests for behavioral changes.
+5. Open a pull request with:
+   - Problem statement
+   - Approach summary
+   - Screenshots or API samples (if relevant)
+   - Any migration/setup notes
+
+Please ensure your changes preserve existing business rules and do not break database object dependencies.
 
 ---
 
-## 15. License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## 23. LICENSE
+
+This project is licensed under the **MIT License**.  
+See the LICENSE file for complete terms.
